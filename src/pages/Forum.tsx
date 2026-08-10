@@ -196,13 +196,13 @@ const generateTestMessages = (): any[] => {
 
   // ── Tech discussions (spread over 5 days) ──
   m("🚀 React 19 just dropped! Server Components are now stable. Anyone tried migrating a production app yet?", 0, 96);
-  m("We migrated our dashboard last week. The streaming SSR is incredible — TTFB dropped by 60%", 2, 95, { replyCount: 3 });
+  m("We migrated our dashboard last week. The streaming SSR is incredible - TTFB dropped by 60%", 2, 95, { replyCount: 3 });
   m("Honest question: is it worth the migration pain? We have a massive codebase on React 17 still 😅", 4, 94);
   m("@Karthik Worth it if you're doing SSR. If it's a pure SPA, the benefits are more subtle", 1, 93, { reactions: { "👍": 4, "💯": 2 } });
   m("Has anyone here run Bun in production? Our Node.js cold starts on Lambda are killing us", 3, 88);
   m("We switched 3 months ago. Cold starts went from ~800ms to ~120ms. No regrets.", 5, 87.5, { reactions: { "🔥": 6 } });
-  m("Careful with Bun — some npm packages with native bindings still break. Test thoroughly.", 7, 87);
-  m("Rust vs Go for backend services — what's the IIT consensus? Starting a new microservice and genuinely torn", 6, 80);
+  m("Careful with Bun - some npm packages with native bindings still break. Test thoroughly.", 7, 87);
+  m("Rust vs Go for backend services - what's the IIT consensus? Starting a new microservice and genuinely torn", 6, 80);
   m("Go for 90% of use cases. Rust only if you need zero-cost abstractions or systems-level perf.", 8, 79, { reactions: { "👍": 8, "❤️": 2 } });
   m("Go has a gentler learning curve too. Your team will thank you when onboarding new devs", 9, 78.5);
   m("Supabase AMA happening next Friday! Drop your questions here and I'll compile them 📋", 0, 72, { pinned_at: new Date().toISOString(), replyCount: 7 });
@@ -217,12 +217,12 @@ const generateTestMessages = (): any[] => {
 
   // ── Jobs channel ──
   m("🔥 Razorpay is hiring SDE-2s. DM me for referral. TC: 35-42L. Bangalore/Remote", 5, 92, { reactions: { "🔥": 5, "👍": 3 } });
-  m("FAANG vs unicorn comp thread — let's be real about numbers. I'll start: L5 at Google Bangalore, 65L TC", 8, 84, { replyCount: 12, reactions: { "😮": 6 } });
+  m("FAANG vs unicorn comp thread - let's be real about numbers. I'll start: L5 at Google Bangalore, 65L TC", 8, 84, { replyCount: 12, reactions: { "😮": 6 } });
   m("Meesho SDE-3: 52L. Joined at 26, now 28. Best decision of my career honestly", 10, 83);
-  m("Staff Eng journey at 28 — AMA. Went from SDE-1 at Infosys to Staff at Razorpay in 5 years", 6, 76, { replyCount: 15, reactions: { "🔥": 9, "💯": 4 } });
+  m("Staff Eng journey at 28 - AMA. Went from SDE-1 at Infosys to Staff at Razorpay in 5 years", 6, 76, { replyCount: 15, reactions: { "🔥": 9, "💯": 4 } });
   m("is job hopping every 18 months the new normal? I've done 4 companies in 6 years and my salary 5x'd", 14, 68, { is_anonymous: true, reactions: { "😂": 3, "👍": 7 } });
   m("Counterpoint: I stayed 4 years at Amazon, got promoted twice. Loyalty still works if the company is right", 2, 67);
-  m("Bangalore SDE-3 salary benchmarks 2025 — let's crowdsource this. Drop your TC anonymously 📊", 9, 52, { replyCount: 8 });
+  m("Bangalore SDE-3 salary benchmarks 2025 - let's crowdsource this. Drop your TC anonymously 📊", 9, 52, { replyCount: 8 });
   m("45L Flipkart SDE-3, 3 YOE at this level", 0, 51.5, { is_anonymous: true });
   m("58L Atlassian SDE-3, Bangalore. RSUs are the real game changer", 1, 51, { is_anonymous: true, reactions: { "🔥": 2 } });
   m("Anyone know about Cred's hiring freeze? Was supposed to interview next week and got ghosted", 11, 44);
@@ -236,7 +236,7 @@ const generateTestMessages = (): any[] => {
   m("Deployed on Friday. Production went down. Classic. 🫠", 4, 74, { reactions: { "😂": 15, "🔥": 3 } });
   m("```\ngit push origin main --force\n# What could go wrong?\n```", 4, 73.8, { reactions: { "😂": 8 } });
   m("does anyone else pretend to be busy during standups? 'Yeah I was... refactoring... the auth module... 👀'", 12, 60, { is_anonymous: true, reactions: { "😂": 18, "💯": 7 } });
-  m("Weekend hiking near Bangalore — Skandagiri sunrise trek this Saturday. Who's in? 🏔️", 6, 50, { reactions: { "❤️": 4 }, replyCount: 5 });
+  m("Weekend hiking near Bangalore - Skandagiri sunrise trek this Saturday. Who's in? 🏔️", 6, 50, { reactions: { "❤️": 4 }, replyCount: 5 });
   m("Count me in! Last time we went to Nandi Hills it was magical at 5am", 10, 49.5);
   m("Just finished reading 'Staff Engineer' by Will Larson. Highly recommend for anyone eyeing that path 📚", 0, 42, { reactions: { "👍": 6 } });
   m("Monday motivation: Remember when you couldn't even center a div? Look at you now building distributed systems 💪", 1, 28, { reactions: { "❤️": 9, "🔥": 4 } });
@@ -245,7 +245,7 @@ const generateTestMessages = (): any[] => {
   // ── Announcements ──
   m("🎉 We just hit 1000 members! Thank you all for making this community incredible. Here's to the next 1000!", 0, 70, { pinned_at: new Date().toISOString(), reactions: { "🎉": 20, "❤️": 12, "🔥": 8 } });
   m("📢 Anonymous posting is now live! Toggle the 👁️ icon in the composer to post anonymously. Your identity stays hidden.", 0, 62, { reactions: { "👍": 15, "🔥": 6 } });
-  m("Monthly IIT Alumni Meetup — This Saturday 7PM IST at Cubbon Park, Bangalore. DM for exact location 📍", 0, 34, { replyCount: 9, reactions: { "👍": 8, "❤️": 3 } });
+  m("Monthly IIT Alumni Meetup - This Saturday 7PM IST at Cubbon Park, Bangalore. DM for exact location 📍", 0, 34, { replyCount: 9, reactions: { "👍": 8, "❤️": 3 } });
   m("🚀 Job board feature coming next week! Post and discover opportunities within the IIT network. Stay tuned!", 0, 20, { reactions: { "🔥": 10, "💯": 5 } });
 
   // ── Recent messages (today) ──
@@ -283,23 +283,23 @@ const generateScopeDemos = (scopeType: string, scopeKey: string, scopeDef?: any)
       templates = [
         `Welcome to the ${iit} channel 👋 Drop a hi so we know who's around!`,
         `Anyone heading to the ${iit} hostel mess tonight? The Tuesday menu is actually decent`,
-        `${iit} placement cell just opened registrations for the spring drive — link in pinned`,
-        `Looking for a ${iit} senior who did MS in Germany — quick chai/coffee chat?`,
+        `${iit} placement cell just opened registrations for the spring drive - link in pinned`,
+        `Looking for a ${iit} senior who did MS in Germany - quick chai/coffee chat?`,
         `Auditorium AC is broken again 🥲 Anyone raised a complaint?`,
         `${iit} tech fest dates are out. Volunteers needed for logistics`,
-        `Selling cycle in good condition, graduating next month — ${iit} hostel pickup`,
-        `Library extended hours till 2am during endsems — finally`,
+        `Selling cycle in good condition, graduating next month - ${iit} hostel pickup`,
+        `Library extended hours till 2am during endsems - finally`,
       ];
       break;
     case "COURSE_CAMPUS":
     case "COURSE_GLOBAL": {
       const course = (parts[parts.length - 1] || "").replace(/_/g, " ");
       templates = [
-        `${course} folks — what electives did you regret NOT taking?`,
+        `${course} folks - what electives did you regret NOT taking?`,
         `Best prof for the core ${course} sequence? Asking for a junior`,
         `Any ${course} grads working in product roles? Curious about the transition`,
-        `${course} project ideas — sharing a Notion doc with 30+ ideas, DM for link`,
-        `Internship season tips for ${course} students — what worked for you?`,
+        `${course} project ideas - sharing a Notion doc with 30+ ideas, DM for link`,
+        `Internship season tips for ${course} students - what worked for you?`,
         `${course} alumni meetup happening this weekend, IRL + Zoom`,
       ];
       break;
@@ -308,12 +308,12 @@ const generateScopeDemos = (scopeType: string, scopeKey: string, scopeDef?: any)
     case "BATCH_GLOBAL": {
       const batch = parts[parts.length - 1] || "our batch";
       templates = [
-        `Batch ${batch} — convocation photos, drop them here 📸`,
+        `Batch ${batch} - convocation photos, drop them here 📸`,
         `Whatsapp groups are dead, glad we have this. How's everyone doing post-grad?`,
-        `Batch ${batch} reunion — Goa or Bangalore? Vote with reactions 🏖️🌆`,
+        `Batch ${batch} reunion - Goa or Bangalore? Vote with reactions 🏖️🌆`,
         `Who else from ${batch} is doing MBA this year? Forming a study group`,
         `Throwback to ${batch} freshers night… we were so confused 😂`,
-        `${batch} — anyone got married recently?? Share the news!`,
+        `${batch} - anyone got married recently?? Share the news!`,
       ];
       break;
     }
@@ -322,12 +322,12 @@ const generateScopeDemos = (scopeType: string, scopeKey: string, scopeDef?: any)
       const branch = (parts[2] || "").replace(/_/g, " ");
       const batch = parts[3] || "";
       templates = [
-        `${degree} ${branch} ${batch} — our private corner. No outsiders 🤫`,
-        `Project allocation list dropped — who got which guide?`,
+        `${degree} ${branch} ${batch} - our private corner. No outsiders 🤫`,
+        `Project allocation list dropped - who got which guide?`,
         `${branch} comprehensive viva tips please 🙏`,
-        `Lab partners for next sem — drop a 🙋 if you need one`,
+        `Lab partners for next sem - drop a 🙋 if you need one`,
         `Anyone else struggling with the ${branch} core sequence this sem?`,
-        `${batch} ${branch} placement stats — shall we make a shared sheet?`,
+        `${batch} ${branch} placement stats - shall we make a shared sheet?`,
       ];
       break;
     }
@@ -336,10 +336,10 @@ const generateScopeDemos = (scopeType: string, scopeKey: string, scopeDef?: any)
       const branch = (parts[1] || "").replace(/_/g, " ");
       const batch = parts[2] || "";
       templates = [
-        `${degree} ${branch} ${batch} across all 23 IITs — say hi from your campus 👋`,
+        `${degree} ${branch} ${batch} across all 23 IITs - say hi from your campus 👋`,
         `Curriculum comparison: how does ${branch} differ at your IIT?`,
-        `Inter-IIT ${branch} project collab — anyone interested?`,
-        `${batch} ${branch} placement trends across IITs — let's pool data`,
+        `Inter-IIT ${branch} project collab - anyone interested?`,
+        `${batch} ${branch} placement trends across IITs - let's pool data`,
         `Best ${branch} electives at your campus? Recommendations welcome`,
         `Anyone from ${branch} ${batch} going for higher studies abroad?`,
       ];
@@ -578,7 +578,7 @@ const Forum = () => {
   // Smart scroll hide/show
   const { showInput, showNavBar, showHeader, restoreAll } = useScrollBehavior(scrollContainerRef);
 
-  // Mark channel as read when opened — also reset pagination
+  // Mark channel as read when opened - also reset pagination
   useEffect(() => {
     setChannelRead(activeScope.type, activeScope.key);
     setUnreadDots(getUnreadChannels());
@@ -978,7 +978,7 @@ const Forum = () => {
     setShowScrollDown(distFromBottom > 100);
     if (distFromBottom < 50) setNewMsgCount(0);
 
-    // Real DB pagination — fetch older messages when scrolled to top
+    // Real DB pagination - fetch older messages when scrolled to top
     if (el.scrollTop < 120 && !loadingOlder && hasMoreOlder && posts && posts.length > 0) {
       const oldestReal = posts.find((p: any) => !isDemoId(p.id));
       if (!oldestReal) { setHasMoreOlder(false); return; }
@@ -1584,7 +1584,7 @@ const Forum = () => {
               </div>
             )}
 
-            {/* Input row — buttery smooth */}
+            {/* Input row - buttery smooth */}
             {!isRecordingVoice && (
               <div className="flex items-end gap-1.5">
                 <button onClick={() => { setShowAttachMenu(!showAttachMenu); setShowFormatBar(false); }}
@@ -1683,7 +1683,7 @@ const Forum = () => {
           </div>
           <div className="flex-1 overflow-y-auto p-2 scrollbar-hide">
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-2 py-2">
-              Online — {scopeMembers?.length || 0}
+              Online - {scopeMembers?.length || 0}
             </p>
             {scopeMembers?.map((member: any) => (
               <button key={member.user_id} onClick={() => navigate(member.slug ? `/u/${member.slug}` : `/profile/${member.user_id}`)}
@@ -1720,7 +1720,7 @@ const Forum = () => {
           </SheetTitle>
           <div className="overflow-y-auto scrollbar-hide p-2" style={{ height: 'calc(100% - 48px)' }}>
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-2 py-2">
-              Online — {scopeMembers?.length || 0}
+              Online - {scopeMembers?.length || 0}
             </p>
             {scopeMembers?.map((member: any) => (
               <button key={member.user_id} onClick={() => { navigate(member.slug ? `/u/${member.slug}` : `/profile/${member.user_id}`); setMemberPanelOpen(false); }}
@@ -1876,7 +1876,7 @@ const MessagesView = ({ isLoading, groupedByDate, messagesEndRef, onReply, onRea
 }) => (
   <>
     {isLoading ? (
-      /* ── Shimmer Skeleton (FIX 8) — 8 skeleton messages ── */
+      /* ── Shimmer Skeleton (FIX 8) - 8 skeleton messages ── */
       <div className="space-y-4 p-4 animate-fade-in">
         {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
           <div key={i} className="flex gap-3 px-4">
@@ -2202,7 +2202,7 @@ const DiscordMessage = ({ post, onReply, onReact, userId, isAdmin, onAdminPin, o
         </div>
       )}
 
-      {/* NO hover actions (FIX 1 — removed entirely) */}
+      {/* NO hover actions (FIX 1 - removed entirely) */}
 
       {/* Long-press / right-click action sheet (FIX 7) */}
       {showActions && (
@@ -2241,7 +2241,7 @@ const DiscordMessage = ({ post, onReply, onReact, userId, isAdmin, onAdminPin, o
                 <ActionButton icon={MessageSquare} label="Thread" onClick={() => { onThread(post); setShowActions(false); }} />
                 <ActionButton icon={Forward} label="Forward" onClick={() => { onForward(post); setShowActions(false); }} />
                 
-                {/* Row 3: Delete — only own messages with confirm */}
+                {/* Row 3: Delete - only own messages with confirm */}
                 {isMine && !isDeleted && (
                   <>
                     <div className="h-px bg-border mx-3 my-1" />

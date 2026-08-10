@@ -12,7 +12,7 @@ const DEFAULT_ICONS: Record<string, any> = {
   calendar: Calendar,
 };
 
-// Bottom nav — Forum first, Events added
+// Bottom nav - Forum first, Events added
 const ALL_TABS = [
   { path: "/cirkle-forum", key: "forum", fallbackLabel: "Forum", isLogo: true },
   { path: "/consult", key: "consult", fallbackLabel: "Consult", isLogo: false },

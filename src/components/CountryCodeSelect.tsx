@@ -80,7 +80,7 @@ const CountryCodeSelect = ({ value, onChange }: Props) => {
             ))}
           </div>
 
-          {/* Other — custom dialing code */}
+          {/* Other - custom dialing code */}
           <div className="border-t border-border pt-3">
             {showCustom ? (
               <div className="flex items-center gap-2">
@@ -103,7 +103,7 @@ const CountryCodeSelect = ({ value, onChange }: Props) => {
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-muted/50 transition-colors"
               >
                 <span className="text-xl">🌍</span>
-                <span className="text-sm font-medium text-foreground flex-1 text-left">Other — enter your own code</span>
+                <span className="text-sm font-medium text-foreground flex-1 text-left">Other - enter your own code</span>
               </button>
             )}
           </div>

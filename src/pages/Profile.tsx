@@ -656,9 +656,9 @@ const Profile = () => {
               </div>
               {(displayProfile as any)?.is_mentor ? (
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between py-2 border-b border-border"><div className="flex items-center gap-2"><MessageSquare className="w-4 h-4 text-muted-foreground" /><span className="text-sm text-foreground">Chat</span></div><span className="text-sm font-semibold text-foreground">₹{(displayProfile as any).mentor_price_chat || "—"}</span></div>
-                  <div className="flex items-center justify-between py-2 border-b border-border"><div className="flex items-center gap-2"><Phone className="w-4 h-4 text-muted-foreground" /><span className="text-sm text-foreground">Audio Call</span></div><span className="text-sm font-semibold text-foreground">₹{(displayProfile as any).mentor_price_audio || "—"}</span></div>
-                  <div className="flex items-center justify-between py-2"><div className="flex items-center gap-2"><Video className="w-4 h-4 text-muted-foreground" /><span className="text-sm text-foreground">Video Call</span></div><span className="text-sm font-semibold text-foreground">₹{(displayProfile as any).mentor_price_video || "—"}</span></div>
+                  <div className="flex items-center justify-between py-2 border-b border-border"><div className="flex items-center gap-2"><MessageSquare className="w-4 h-4 text-muted-foreground" /><span className="text-sm text-foreground">Chat</span></div><span className="text-sm font-semibold text-foreground">₹{(displayProfile as any).mentor_price_chat || "-"}</span></div>
+                  <div className="flex items-center justify-between py-2 border-b border-border"><div className="flex items-center gap-2"><Phone className="w-4 h-4 text-muted-foreground" /><span className="text-sm text-foreground">Audio Call</span></div><span className="text-sm font-semibold text-foreground">₹{(displayProfile as any).mentor_price_audio || "-"}</span></div>
+                  <div className="flex items-center justify-between py-2"><div className="flex items-center gap-2"><Video className="w-4 h-4 text-muted-foreground" /><span className="text-sm text-foreground">Video Call</span></div><span className="text-sm font-semibold text-foreground">₹{(displayProfile as any).mentor_price_video || "-"}</span></div>
                 </div>
               ) : <p className="text-sm text-muted-foreground/50 italic text-center py-8">Not a mentor</p>}
             </div>

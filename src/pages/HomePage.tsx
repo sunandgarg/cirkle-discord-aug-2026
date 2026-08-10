@@ -1144,7 +1144,7 @@ const HomePage = () => {
           <div className="bg-card rounded-2xl border border-border p-6 max-w-sm w-full animate-fade-in text-center">
             <p className="text-lg font-bold text-foreground mb-2">Wait, really? 🥺</p>
             <p className="text-sm text-muted-foreground mb-4">
-              Your profile is like a first impression — complete it to stand out!
+              Your profile is like a first impression - complete it to stand out!
             </p>
             <div className="flex gap-3">
               <Button variant="outline" className="flex-1" onClick={confirmCancel}>

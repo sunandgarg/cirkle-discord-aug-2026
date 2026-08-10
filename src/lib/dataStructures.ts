@@ -90,7 +90,7 @@ export class PostFeedEngine {
     return this.globalTrending.slice(0, limit).map(e => this.postIndex.get(e.id)).filter(Boolean);
   }
 
-  /** Get a post by ID — O(1) */
+  /** Get a post by ID - O(1) */
   getPost(id: string): any | undefined {
     return this.postIndex.get(id);
   }
@@ -158,7 +158,7 @@ export class ForumTree {
     return Array.from(ids).map(cid => this.nodes.get(cid)).filter(Boolean) as ForumNode[];
   }
 
-  /** Get path from root to node — cached after first computation */
+  /** Get path from root to node - cached after first computation */
   getPath(nodeId: string): string[] {
     if (this.pathCache.has(nodeId)) return this.pathCache.get(nodeId)!;
     const path: string[] = [];
@@ -283,7 +283,7 @@ export class NotificationEngine {
   }
 
   addNotification(notif: AppNotification): void {
-    // Batch check — never batch direct replies
+    // Batch check - never batch direct replies
     if (notif.type !== "direct_reply" && notif.sourceId) {
       const batchKey = `${notif.type}:${notif.sourceId}`;
       const existing = this.batchBuffer.get(batchKey);

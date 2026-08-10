@@ -113,7 +113,7 @@ const OtpVerification = () => {
 
 
       toast.success("Verified successfully!");
-      // Don't navigate directly — set flag and let useEffect handle it
+      // Don't navigate directly - set flag and let useEffect handle it
       // once auth state propagates
       setAuthComplete(true);
     } catch (err: any) {

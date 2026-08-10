@@ -2,7 +2,7 @@ import { useState, useEffect, createContext, useContext, useCallback, ReactNode,
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
-// ⚠️ HARDCODED SUPER ADMIN — DO NOT MODIFY ⚠️
+// ⚠️ HARDCODED SUPER ADMIN - DO NOT MODIFY ⚠️
 const SUPER_ADMIN_PHONE = "8700602524";
 
 interface AuthContextType {
@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsAdmin(admin);
       refreshRetryRef.current = 0; // reset on success
     } catch (err) {
-      // Network error — keep existing user state, don't sign out
+      // Network error - keep existing user state, don't sign out
       console.warn("Failed to load user data, keeping session:", err);
       setUser(u);
     }
@@ -92,7 +92,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (!session && !error) {
-          // Try refreshing — keeps user logged in across restarts
+          // Try refreshing - keeps user logged in across restarts
           const { data: refreshData } = await supabase.auth.refreshSession();
           if (!refreshData?.session) {
             setLoading(false);
@@ -100,7 +100,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           }
         }
       } catch {
-        // Network failure on init — don't force logout, just stop loading
+        // Network failure on init - don't force logout, just stop loading
         setLoading(false);
         initializedRef.current = true;
       }
@@ -117,7 +117,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       } catch {
         refreshRetryRef.current += 1;
-        // Only log, never sign out — let autoRefreshToken handle recovery
+        // Only log, never sign out - let autoRefreshToken handle recovery
         if (refreshRetryRef.current <= 3) {
           console.warn(`Silent refresh attempt ${refreshRetryRef.current} failed, will retry.`);
         }

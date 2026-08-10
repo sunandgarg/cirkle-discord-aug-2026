@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    /* Refined light palette — LinkedIn-inspired with better contrast */
+    /* Refined light palette - LinkedIn-inspired with better contrast */
     --background: 210 20% 97%;
     --foreground: 214 32% 9%;
     --card: 0 0% 100%;
@@ -68,7 +68,7 @@
   }
 
   .dark {
-    /* Premium dark navy — not pure black */
+    /* Premium dark navy - not pure black */
     --background: 216 28% 5%;
     --foreground: 214 20% 92%;
     --card: 215 25% 8%;
@@ -151,7 +151,7 @@
     @apply transition-colors duration-150;
   }
 
-  /* Skip to main content — accessibility */
+  /* Skip to main content - accessibility */
   .skip-to-main {
     @apply sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[9999] focus:bg-primary focus:text-primary-foreground focus:px-4 focus:py-2 focus:rounded-md;
   }
@@ -277,7 +277,7 @@
     font-family: 'JetBrains Mono', 'Geist Mono', monospace;
   }
 
-  /* Touch target minimum — accessibility */
+  /* Touch target minimum - accessibility */
   .touch-target {
     min-width: 44px;
     min-height: 44px;

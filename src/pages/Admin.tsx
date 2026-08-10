@@ -452,7 +452,7 @@ const Admin = () => {
             </div>
           </TabsContent>
 
-          {/* Reports Tab — grouped by message with severity buckets */}
+          {/* Reports Tab - grouped by message with severity buckets */}
           <TabsContent value="reports" className="space-y-3">
             <p className="text-xs text-muted-foreground mb-2">{reports?.length || 0} reported messages</p>
             {reports?.length === 0 && (

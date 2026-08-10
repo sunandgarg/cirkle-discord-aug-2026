@@ -63,7 +63,7 @@ const Consult = () => {
     staleTime: Infinity,
   });
 
-  // My bookings — topmate-style
+  // My bookings - topmate-style
   const { data: myBookings } = useQuery({
     queryKey: ["my-consultations", user?.id],
     queryFn: async () => {
@@ -158,7 +158,7 @@ const Consult = () => {
 
   return (
     <div className="bg-background flex flex-col min-h-0">
-      {/* Booking Modal — topmate.io style */}
+      {/* Booking Modal - topmate.io style */}
       {bookingExpert && (
         <div className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-sm flex items-end sm:items-center justify-center">
           <div className="bg-card w-full max-w-md rounded-t-3xl sm:rounded-3xl border border-border p-6 animate-fade-in max-h-[90vh] overflow-y-auto shadow-2xl">
@@ -181,7 +181,7 @@ const Consult = () => {
               <button onClick={() => setBookingExpert(null)} className="p-1.5 rounded-full hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"><X className="w-5 h-5" /></button>
             </div>
 
-            {/* Service type — topmate style */}
+            {/* Service type - topmate style */}
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">Choose Service</Label>
             <div className="flex gap-2 mb-5">
               <ServiceButton icon={MessageCircle} label="Chat" price={bookingExpert.mentor_price_chat} color="bg-primary/10 border-primary text-primary" active={bookingType === "chat"} onClick={() => setBookingType("chat")} />
@@ -232,7 +232,7 @@ const Consult = () => {
             </div>
 
             <Button className="w-full h-12 rounded-2xl text-sm font-bold gap-2" onClick={() => bookMutation.mutate()} disabled={bookMutation.isPending || !selectedDate || !selectedTime}>
-              {bookMutation.isPending ? "Booking..." : <><Sparkles className="w-4 h-4" /> Confirm Booking — ₹{
+              {bookMutation.isPending ? "Booking..." : <><Sparkles className="w-4 h-4" /> Confirm Booking - ₹{
                 bookingType === "chat" ? (bookingExpert.mentor_price_chat || 200)
                 : bookingType === "audio" ? (bookingExpert.mentor_price_audio || 300)
                 : (bookingExpert.mentor_price_video || 400)
@@ -256,7 +256,7 @@ const Consult = () => {
           </div>
         </div>
 
-        {/* Tabs — topmate style */}
+        {/* Tabs - topmate style */}
         <div className="px-4 py-1">
           <div className="max-w-lg mx-auto flex gap-2">
             <button onClick={() => setActiveTab("mentors")}
@@ -412,9 +412,9 @@ const Consult = () => {
                     <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                       {!user || !isVerified ? (
                         <div className="flex-1 flex gap-2 opacity-50 pointer-events-none">
-                          <div className="flex-1 rounded-2xl py-2.5 px-3 flex items-center justify-center gap-1.5 pricing-chat"><MessageCircle className="w-3.5 h-3.5" /><span className="text-xs font-bold">₹{chatPrice || "—"}</span></div>
-                          <div className="flex-1 rounded-2xl py-2.5 px-3 flex items-center justify-center gap-1.5 pricing-audio"><Phone className="w-3.5 h-3.5" /><span className="text-xs font-bold">₹{audioPrice || "—"}</span></div>
-                          <div className="flex-1 rounded-2xl py-2.5 px-3 flex items-center justify-center gap-1.5 pricing-video"><Video className="w-3.5 h-3.5" /><span className="text-xs font-bold">₹{videoPrice || "—"}</span></div>
+                          <div className="flex-1 rounded-2xl py-2.5 px-3 flex items-center justify-center gap-1.5 pricing-chat"><MessageCircle className="w-3.5 h-3.5" /><span className="text-xs font-bold">₹{chatPrice || "-"}</span></div>
+                          <div className="flex-1 rounded-2xl py-2.5 px-3 flex items-center justify-center gap-1.5 pricing-audio"><Phone className="w-3.5 h-3.5" /><span className="text-xs font-bold">₹{audioPrice || "-"}</span></div>
+                          <div className="flex-1 rounded-2xl py-2.5 px-3 flex items-center justify-center gap-1.5 pricing-video"><Video className="w-3.5 h-3.5" /><span className="text-xs font-bold">₹{videoPrice || "-"}</span></div>
                         </div>
                       ) : booked ? (
                         <div className="flex-1 rounded-2xl py-2.5 px-3 flex items-center justify-center gap-1.5 bg-[hsl(var(--success))]/10 text-[hsl(var(--success))] border border-[hsl(var(--success))]/20">

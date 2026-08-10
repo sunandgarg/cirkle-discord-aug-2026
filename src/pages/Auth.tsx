@@ -59,7 +59,7 @@ const Auth = () => {
 
   return (
     <div className="h-[100dvh] flex flex-col overflow-hidden bg-background" style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}>
-      {/* Avatar grid background — dark image only */}
+      {/* Avatar grid background - dark image only */}
       <div className="flex-1 relative overflow-hidden min-h-0 bg-[hsl(216_28%_5%)]">
         <div className="grid grid-cols-4 gap-1 p-1 opacity-60">
           {Array.from({ length: 12 }).map((_, i) => (

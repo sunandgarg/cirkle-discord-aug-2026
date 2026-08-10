@@ -84,7 +84,7 @@ const PostVerifyOnboarding = ({ derivedIit, onComplete }: PostVerifyOnboardingPr
     if (!user) return;
     setLoading(true);
     try {
-      // 1. Education first — so we have an ID for primary_education_id
+      // 1. Education first - so we have an ID for primary_education_id
       let primaryEduId: string | null = null;
       const { data: existingEdu } = await supabase
         .from("education")
@@ -106,7 +106,7 @@ const PostVerifyOnboarding = ({ derivedIit, onComplete }: PostVerifyOnboardingPr
         primaryEduId = newEdu?.id ?? null;
       }
 
-      // 2. Profile update — single atomic write including primary_education_id and linkedin
+      // 2. Profile update - single atomic write including primary_education_id and linkedin
       const socialLinks: Record<string, string> = {};
       if (linkedin.trim()) socialLinks.linkedin = linkedin.trim();
 

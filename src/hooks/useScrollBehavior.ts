@@ -35,7 +35,7 @@ export const useScrollBehavior = (scrollRef: React.RefObject<HTMLDivElement | nu
       const delta = currentY - lastScrollY.current;
       const distFromBottom = el.scrollHeight - currentY - el.clientHeight;
 
-      // Near bottom — restore everything
+      // Near bottom - restore everything
       if (distFromBottom < BOTTOM_PROXIMITY) {
         setState({ showHeader: true, showInput: true, showNavBar: true });
         accumulatedUp.current = 0;

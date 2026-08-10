@@ -13,7 +13,7 @@ const CirkleLogo = ({ className, strokeWidth = 1.8 }: { className?: string; stro
   </svg>
 );
 
-// Main navigation — Forum first, Network removed
+// Main navigation - Forum first, Network removed
 const MAIN_TABS = [
   { path: "/cirkle-forum", key: "forum", fallbackLabel: "Cirkle Forum", icon: CirkleLogo, isCustom: true },
   { path: "/consult", key: "consult", fallbackLabel: "Consult", icon: Waypoints, isCustom: false },
@@ -82,7 +82,7 @@ const DesktopSidebar = () => {
         </button>
       </div>
 
-      {/* Nav — Forum is first, Home removed */}
+      {/* Nav - Forum is first, Home removed */}
       <nav className="flex-1 px-2 py-2 space-y-0.5 overflow-y-auto">
         <p className="text-[9px] font-semibold text-muted-foreground/50 uppercase tracking-wider px-2 mb-1">Navigate</p>
         {MAIN_TABS.map(({ path, key, fallbackLabel, icon: Icon }) => {

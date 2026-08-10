@@ -29,7 +29,7 @@ const Landing = () => {
   const { user, loading } = useAuth();
   const journeyRef = useRef<HTMLDivElement>(null);
 
-  // Airplane scroll animation — moves along a wave path
+  // Airplane scroll animation - moves along a wave path
   const { scrollYProgress } = useScroll({ target: journeyRef, offset: ["start end", "end start"] });
   const planeX = useTransform(scrollYProgress, [0, 0.3, 0.5, 0.7, 1], ["5%", "25%", "50%", "75%", "90%"]);
   const planeY = useTransform(scrollYProgress, [0, 0.15, 0.3, 0.45, 0.6, 0.75, 1], ["0px", "-20px", "8px", "-16px", "4px", "-12px", "0px"]);
@@ -52,7 +52,7 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
-      {/* ─── Hero — immersive, tall, no top nav bar ─── */}
+      {/* ─── Hero - immersive, tall, no top nav bar ─── */}
       <section className="relative min-h-[85vh] flex flex-col items-center justify-center px-5 py-20">
         {/* Background gradient */}
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-background to-background pointer-events-none" />
@@ -69,7 +69,7 @@ const Landing = () => {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-60" />
               <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary" />
             </span>
-            Live — IIT Community
+            Live - IIT Community
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.08] mb-6 text-foreground">
@@ -79,7 +79,7 @@ const Landing = () => {
           </h1>
 
           <p className="text-base sm:text-lg text-muted-foreground max-w-md mx-auto mb-10 leading-relaxed">
-            A community-first networking forum + job platform — starting with IITs, expanding to many more communities.
+            A community-first networking forum + job platform - starting with IITs, expanding to many more communities.
           </p>
 
           <Button size="lg" onClick={goAuth} className="rounded-xl px-10 h-13 text-sm font-semibold gap-2 shadow-md hover:shadow-lg transition-all">
@@ -94,7 +94,7 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* ─── Features — compact grid ─── */}
+      {/* ─── Features - compact grid ─── */}
       <section className="py-10 px-5 border-y border-border/40">
         <div className="max-w-2xl mx-auto">
           <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground/40 mb-4 text-center">What you get</p>

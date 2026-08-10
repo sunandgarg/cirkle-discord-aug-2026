@@ -129,7 +129,7 @@ export const GlobalSearchOverlay = ({ open, onClose, onSelect }: GlobalSearchOve
           ) : (
             <div className="p-4">
               <p className="text-sm text-muted-foreground text-center py-8">
-                Search results for "{query}" — coming soon
+                Search results for "{query}" - coming soon
               </p>
             </div>
           )}

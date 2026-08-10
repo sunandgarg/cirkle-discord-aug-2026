@@ -83,7 +83,7 @@ const StoryViewer = ({ groups, initialGroupIndex, onClose }: StoryViewerProps) =
     <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center">
       {/* Story container with Instagram aspect ratio */}
       <div className="relative w-full h-full max-w-[420px] max-h-[750px] mx-auto overflow-hidden rounded-none sm:rounded-3xl">
-        {/* Progress bars — Instagram style */}
+        {/* Progress bars - Instagram style */}
         <div className="absolute top-0 left-0 right-0 z-20 flex gap-1 px-3 pt-3">
           {group.stories.map((_, i) => (
             <div key={i} className="flex-1 h-[3px] bg-white/25 rounded-full overflow-hidden">
@@ -98,7 +98,7 @@ const StoryViewer = ({ groups, initialGroupIndex, onClose }: StoryViewerProps) =
           ))}
         </div>
 
-        {/* User info — Instagram style */}
+        {/* User info - Instagram style */}
         <div className="absolute top-5 left-0 right-0 z-20 flex items-center gap-3 px-4 pt-3">
           <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center overflow-hidden ring-2 ring-white/40">
             {group.avatarUrl ? (
@@ -137,7 +137,7 @@ const StoryViewer = ({ groups, initialGroupIndex, onClose }: StoryViewerProps) =
         <button className="absolute left-0 top-0 w-1/3 h-full z-10" onClick={goPrev} aria-label="Previous" />
         <button className="absolute right-0 top-0 w-1/3 h-full z-10" onClick={goNext} aria-label="Next" />
 
-        {/* Bottom input — Instagram style */}
+        {/* Bottom input - Instagram style */}
         <div className="absolute bottom-0 left-0 right-0 z-20 flex items-center gap-2 px-4 pb-6 pt-10 bg-gradient-to-t from-black/60 to-transparent">
           <input
             placeholder="Send message"
@@ -152,7 +152,7 @@ const StoryViewer = ({ groups, initialGroupIndex, onClose }: StoryViewerProps) =
         </div>
       </div>
 
-      {/* Side navigation — desktop */}
+      {/* Side navigation - desktop */}
       {groupIdx > 0 && (
         <button onClick={goPrev} className="absolute left-4 top-1/2 -translate-y-1/2 z-30 p-3 bg-white/10 backdrop-blur-sm rounded-full text-white hover:bg-white/20 transition-colors hidden md:block">
           <ChevronLeft className="w-6 h-6" />

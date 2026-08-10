@@ -34,7 +34,7 @@ const PageLoader = () => (
   </div>
 );
 
-// Global QueryClient — data stays cached until explicit refresh
+// Global QueryClient - data stays cached until explicit refresh
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -66,9 +66,9 @@ const App = () => (
                 <Route path="/phone-verify" element={<PhoneVerification />} />
                 <Route path="/iit-verify" element={<IitVerification />} />
 
-                {/* App routes with layout — Forum is the primary product */}
+                {/* App routes with layout - Forum is the primary product */}
                 <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-                  {/* Forum — Discord-style, primary landing after login */}
+                  {/* Forum - Discord-style, primary landing after login */}
                   <Route path="/cirkle-forum" element={<Forum />} />
                   <Route path="/cirkle-forum/*" element={<Forum />} />
 

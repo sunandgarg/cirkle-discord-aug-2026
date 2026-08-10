@@ -13,7 +13,7 @@ const LockedModeOverlay = () => {
         </div>
         <h2 className="text-xl font-bold text-foreground mb-2">Verification Required</h2>
         <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-          Verify your IIT email to unlock the full Cirkle experience — forum, network, jobs, and more.
+          Verify your IIT email to unlock the full Cirkle experience - forum, network, jobs, and more.
         </p>
         <Button
           size="lg"

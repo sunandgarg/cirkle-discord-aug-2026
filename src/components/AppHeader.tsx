@@ -37,7 +37,7 @@ const AppHeader = () => {
   return (
     <header className="sticky top-0 z-40 bg-card/95 backdrop-blur-sm border-b border-border px-4 py-2.5" role="banner">
       <div className="flex items-center justify-between max-w-4xl mx-auto">
-        {/* Left: Avatar + Greeting — friendly, human feel */}
+        {/* Left: Avatar + Greeting - friendly, human feel */}
         <div className="flex items-center gap-3">
           <button onClick={() => navigate("/profile")} className="flex-shrink-0" aria-label="View profile">
             <div className="w-10 h-10 rounded-full border border-border flex items-center justify-center overflow-hidden bg-secondary">
@@ -49,7 +49,7 @@ const AppHeader = () => {
             </div>
           </button>
           <div>
-            {/* Show "Hi, LastName" — personal touch */}
+            {/* Show "Hi, LastName" - personal touch */}
             <p className="text-base font-bold text-foreground leading-tight">
               Hi, {getDisplayName(profile?.name)}
             </p>
@@ -61,7 +61,7 @@ const AppHeader = () => {
           </div>
         </div>
 
-        {/* Right: Admin + Notifications only — search removed per requirement */}
+        {/* Right: Admin + Notifications only - search removed per requirement */}
         <div className="flex items-center gap-1">
           {isAdmin && (
             <button onClick={() => navigate("/admin")} className="p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-accent transition-colors" aria-label="Admin">

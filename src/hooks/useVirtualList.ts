@@ -14,7 +14,7 @@ interface VirtualItem {
 }
 
 /**
- * Virtual list hook — only renders visible items + overscan.
+ * Virtual list hook - only renders visible items + overscan.
  * Supports variable height items via measured heights.
  */
 export function useVirtualList({

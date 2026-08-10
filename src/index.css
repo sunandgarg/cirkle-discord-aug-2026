@@ -1,0 +1,319 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@layer base {
+  :root {
+    /* Refined light palette — LinkedIn-inspired with better contrast */
+    --background: 210 20% 97%;
+    --foreground: 214 32% 9%;
+    --card: 0 0% 100%;
+    --card-foreground: 214 32% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 214 32% 9%;
+    --primary: 210 78% 40%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 16% 92%;
+    --secondary-foreground: 214 25% 18%;
+    --muted: 210 14% 93%;
+    --muted-foreground: 214 12% 40%;
+    --accent: 210 20% 94%;
+    --accent-foreground: 214 32% 9%;
+    --destructive: 0 72% 48%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 16% 86%;
+    --input: 214 16% 86%;
+    --ring: 210 78% 40%;
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 214 32% 9%;
+    --sidebar-primary: 210 78% 40%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 20% 95%;
+    --sidebar-accent-foreground: 214 32% 9%;
+    --sidebar-border: 214 16% 86%;
+    --sidebar-ring: 210 78% 40%;
+
+    --nav-bg: 0 0% 100%;
+    --nav-active: 210 78% 40%;
+    --nav-inactive: 214 12% 46%;
+    --badge-bg: 210 55% 92%;
+    --badge-text: 210 78% 32%;
+    --success: 152 60% 38%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 95% 48%;
+    --warning-foreground: 0 0% 100%;
+    --anonymous: 270 32% 54%;
+    --anonymous-foreground: 0 0% 100%;
+    --story-ring: 210 78% 40%;
+    --story-ring-end: 210 70% 52%;
+    --chat-purple: 270 42% 56%;
+    --chat-blue: 210 78% 40%;
+    --chat-orange: 24 88% 52%;
+    --warm-accent: 210 78% 40%;
+
+    /* Extended tokens */
+    --surface: 210 18% 96%;
+    --surface-raised: 0 0% 100%;
+    --border-active: 210 55% 62%;
+    --iit-gold: 42 88% 52%;
+    --iit-gold-foreground: 42 90% 12%;
+    --accent-subtle: 210 55% 92%;
+    --text-primary: 214 32% 9%;
+    --text-secondary: 214 15% 30%;
+    --text-muted: 214 10% 48%;
+  }
+
+  .dark {
+    /* Premium dark navy — not pure black */
+    --background: 216 28% 5%;
+    --foreground: 214 20% 92%;
+    --card: 215 25% 8%;
+    --card-foreground: 214 20% 92%;
+    --popover: 215 25% 8%;
+    --popover-foreground: 214 20% 92%;
+    --primary: 213 94% 56%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 215 18% 12%;
+    --secondary-foreground: 214 20% 92%;
+    --muted: 215 18% 12%;
+    --muted-foreground: 214 12% 50%;
+    --accent: 215 15% 11%;
+    --accent-foreground: 214 20% 92%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 214 20% 92%;
+    --border: 215 15% 14%;
+    --input: 215 15% 14%;
+    --ring: 213 94% 56%;
+
+    --sidebar-background: 216 28% 6%;
+    --sidebar-foreground: 214 12% 85%;
+    --sidebar-primary: 213 94% 56%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 215 15% 11%;
+    --sidebar-accent-foreground: 214 20% 92%;
+    --sidebar-border: 215 15% 14%;
+    --sidebar-ring: 213 94% 56%;
+
+    --nav-bg: 216 28% 6%;
+    --nav-active: 213 94% 56%;
+    --nav-inactive: 214 12% 50%;
+    --badge-bg: 213 40% 14%;
+    --badge-text: 213 80% 68%;
+    --story-ring: 213 94% 56%;
+    --story-ring-end: 213 80% 65%;
+
+    /* Extended dark tokens */
+    --surface: 215 22% 9%;
+    --surface-raised: 215 20% 12%;
+    --border-active: 213 50% 35%;
+    --iit-gold: 42 85% 58%;
+    --iit-gold-foreground: 42 85% 90%;
+    --accent-subtle: 213 30% 15%;
+    --text-primary: 214 30% 95%;
+    --text-secondary: 214 15% 70%;
+    --text-muted: 214 10% 42%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100%;
+    width: 100%;
+    overflow-x: hidden;
+    overscroll-behavior-y: contain;
+  }
+  #root {
+    @apply bg-background text-foreground;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  button, a, input, textarea, select {
+    @apply transition-colors duration-150;
+  }
+
+  /* Skip to main content — accessibility */
+  .skip-to-main {
+    @apply sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[9999] focus:bg-primary focus:text-primary-foreground focus:px-4 focus:py-2 focus:rounded-md;
+  }
+}
+
+@layer utilities {
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .tab-bar-height {
+    height: 4rem;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .story-ring {
+    background: conic-gradient(
+      hsl(var(--story-ring)),
+      hsl(var(--story-ring-end)),
+      hsl(var(--story-ring))
+    );
+    padding: 2.5px;
+    border-radius: 9999px;
+  }
+  .story-ring-inner {
+    background: hsl(var(--background));
+    border-radius: 9999px;
+    padding: 2px;
+  }
+
+  .profile-cover {
+    background: linear-gradient(135deg, 
+      hsl(var(--primary)) 0%, 
+      hsl(var(--primary) / 0.8) 50%, 
+      hsl(var(--accent-subtle)) 100%
+    );
+    position: relative;
+    overflow: hidden;
+  }
+
+  .pricing-chat {
+    border: 1.5px solid hsl(var(--chat-purple));
+    background: hsl(var(--chat-purple) / 0.08);
+    color: hsl(var(--chat-purple));
+  }
+  .pricing-audio {
+    border: 1.5px solid hsl(var(--chat-blue));
+    background: hsl(var(--chat-blue) / 0.08);
+    color: hsl(var(--chat-blue));
+  }
+  .pricing-video {
+    border: 1.5px solid hsl(var(--chat-orange));
+    background: hsl(var(--chat-orange) / 0.08);
+    color: hsl(var(--chat-orange));
+  }
+
+  .hover-scale {
+    @apply transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98];
+  }
+  .hover-lift {
+    @apply transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md;
+  }
+  .press-scale {
+    @apply transition-transform duration-100 active:scale-[0.97];
+  }
+  .animate-fade-in {
+    animation: fadeIn 0.25s ease-out;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  .shimmer-bg {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--muted)) 25%,
+      hsl(var(--muted-foreground) / 0.08) 50%,
+      hsl(var(--muted)) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .animate-slide-up {
+    animation: slideUp 0.25s ease-out;
+  }
+  @keyframes bounceIn {
+    0% { transform: translateY(20px) scale(0.9); opacity: 0; }
+    60% { transform: translateY(-4px) scale(1.02); opacity: 1; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+  }
+  .animate-bounce-in {
+    animation: bounceIn 0.4s ease-out;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .animate-pulse-dot {
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  .chat-wallpaper {
+    background-color: hsl(var(--background));
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23e5e5e5' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+  .font-display {
+    font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  }
+  .font-mono {
+    font-family: 'JetBrains Mono', 'Geist Mono', monospace;
+  }
+
+  /* Touch target minimum — accessibility */
+  .touch-target {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* Gold accent for IIT prestige */
+  .text-iit-gold {
+    color: hsl(var(--iit-gold));
+  }
+  .bg-iit-gold {
+    background-color: hsl(var(--iit-gold));
+  }
+}
+
+@layer components {
+  .engagement-btn {
+    @apply flex items-center gap-1.5 text-xs text-muted-foreground transition-all duration-200;
+  }
+  .engagement-btn:hover {
+    @apply text-primary;
+  }
+  .engagement-btn:active {
+    @apply scale-95;
+  }
+  .engagement-btn.active {
+    @apply text-primary font-medium;
+  }
+
+  /* Skeleton shimmer for loading states */
+  .skeleton-line {
+    @apply rounded shimmer-bg;
+    height: 14px;
+  }
+  .skeleton-avatar {
+    @apply rounded-full shimmer-bg;
+    width: 40px;
+    height: 40px;
+  }
+}

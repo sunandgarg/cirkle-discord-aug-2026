@@ -74,7 +74,7 @@ const OtpVerification = () => {
       const cleanPhone = phone.replace(/\D/g, "");
       const isSuperAdmin = cleanPhone === SUPER_ADMIN_PHONE;
       const email = isSuperAdmin ? "admin@cirkle.world" : `${cleanPhone}@cirkle.world`;
-      const password = isSuperAdmin ? "admin123456" : `cirkle_${cleanPhone}_secure`;
+      const password = `Cirkle!${cleanPhone}#Wv7${cleanPhone.slice(-3)}Zq`;
       const displayName = isSuperAdmin ? "SUNAND GARG" : `User ${cleanPhone.slice(-4)}`;
 
       // Try login first

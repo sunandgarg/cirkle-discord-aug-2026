@@ -21,6 +21,7 @@ import { passingYears } from "@/data/dropdownOptions";
 import { ALL_COURSES, getSpecialisations } from "@/data/courseSpecialisations";
 import { companies } from "@/data/companiesList";
 import { locations } from "@/data/locationsList";
+import { getSmallCached, setSmallCached } from "@/lib/browserCache";
 
 const PROFILE_TABS = ["About Me", "Education", "Professional Details", "Expertise", "Pricing Information", "Social Handles", "Activity"];
 
@@ -86,10 +87,14 @@ const Profile = () => {
     queryFn: async () => {
       if (!targetId) return null;
       const { data } = await supabase.from("profiles").select("*").eq("user_id", targetId).maybeSingle();
+      if (data) setSmallCached(`profile:${targetId}`, data);
       return data;
     },
     enabled: !!targetId,
-    staleTime: 0, gcTime: 0, refetchOnMount: "always",
+    initialData: () => targetId ? getSmallCached(`profile:${targetId}`, 7 * 24 * 60 * 60 * 1000) ?? undefined : undefined,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 24 * 60 * 60 * 1000,
+    refetchOnMount: false,
   });
 
   const { data: education, refetch: refetchEducation } = useQuery({
@@ -99,7 +104,7 @@ const Profile = () => {
       const { data } = await supabase.from("education").select("*").eq("user_id", targetId).order("created_at", { ascending: false });
       return data ?? [];
     },
-    enabled: !!targetId, staleTime: 5000, refetchOnMount: "always",
+    enabled: !!targetId, staleTime: 5 * 60 * 1000, gcTime: 24 * 60 * 60 * 1000,
   });
 
   const { data: experience, refetch: refetchExperience } = useQuery({
@@ -109,7 +114,7 @@ const Profile = () => {
       const { data } = await supabase.from("professional_experience").select("*").eq("user_id", targetId).order("created_at", { ascending: false });
       return data ?? [];
     },
-    enabled: !!targetId, staleTime: 5000, refetchOnMount: "always",
+    enabled: !!targetId, staleTime: 5 * 60 * 1000, gcTime: 24 * 60 * 60 * 1000,
   });
 
   const { data: connectionStatus } = useQuery({
@@ -436,7 +441,7 @@ const Profile = () => {
               <>
                 {connectionStatus === "none" && <Button className="flex-1 rounded-xl h-9 gap-1 text-xs" onClick={() => sendConnect.mutate()}><UserPlus className="w-3.5 h-3.5" /> Connect</Button>}
                 {connectionStatus === "pending" && <Button variant="outline" className="flex-1 rounded-xl h-9 text-xs" disabled><Check className="w-3.5 h-3.5 mr-1" /> Pending</Button>}
-                {connectionStatus === "accepted" && <Button variant="outline" className="flex-1 rounded-xl h-9 gap-1 text-xs" onClick={() => navigate("/chats")}><MessageSquare className="w-3.5 h-3.5" /> Message</Button>}
+                {connectionStatus === "accepted" && <Button variant="outline" className="flex-1 rounded-xl h-9 gap-1 text-xs" onClick={() => navigate(`/chats?user=${targetId}`)}><MessageSquare className="w-3.5 h-3.5" /> Message</Button>}
                 <Button variant="outline" className="rounded-xl h-9 px-3" onClick={() => { navigator.clipboard.writeText(shareUrl); toast.success("Link copied!"); }}><Share2 className="w-3.5 h-3.5" /></Button>
               </>
             )}

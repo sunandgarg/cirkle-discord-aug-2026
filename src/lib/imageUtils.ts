@@ -58,8 +58,7 @@ export const convertToWebP = (
 
     img.onerror = () => {
       URL.revokeObjectURL(url);
-      // Fallback: return original file
-      resolve(file);
+      reject(new Error("This image could not be decoded"));
     };
 
     img.src = url;

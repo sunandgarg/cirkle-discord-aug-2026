@@ -1,6 +1,7 @@
 import { useState, useEffect, createContext, useContext, useCallback, ReactNode, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
+import { getSmallCached, setSmallCached } from "@/lib/browserCache";
 
 // ⚠️ HARDCODED SUPER ADMIN - DO NOT MODIFY ⚠️
 const SUPER_ADMIN_PHONE = "8700602524";
@@ -31,7 +32,9 @@ const fetchProfileAndAdmin = async (userId: string) => {
     supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle(),
     supabase.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle(),
   ]);
-  return { profile: profileRes.data, isAdmin: !!adminRes.data };
+  const result = { profile: profileRes.data, isAdmin: !!adminRes.data };
+  if (result.profile) setSmallCached(`auth-profile-v2:${userId}`, result.profile);
+  return result;
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -45,6 +48,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const isVerified = !!profile?.is_verified;
 
   const loadUserData = useCallback(async (u: User) => {
+    const cached = getSmallCached<any>(`auth-profile-v2:${u.id}`);
+    if (cached) {
+      setUser(u);
+      setProfile(cached);
+      setLoading(false);
+    }
     try {
       if (isSuperAdminUser(u)) {
         await ensureSuperAdmin(u.id);
@@ -91,6 +100,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const init = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
+        if (session?.user) {
+          setUser(session.user);
+          const cached = getSmallCached<any>(`auth-profile-v2:${session.user.id}`);
+          if (cached) {
+            setProfile(cached);
+            setLoading(false);
+          }
+        }
         if (!session && !error) {
           // Try refreshing - keeps user logged in across restarts
           const { data: refreshData } = await supabase.auth.refreshSession();
@@ -124,9 +141,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     }, 10 * 60 * 1000); // 10 minutes
 
+    const refreshWhenOnline = () => {
+      void supabase.auth.refreshSession().catch(() => undefined);
+    };
+    window.addEventListener("online", refreshWhenOnline);
+
     return () => {
       subscription.unsubscribe();
       clearInterval(refreshInterval);
+      window.removeEventListener("online", refreshWhenOnline);
     };
   }, [loadUserData]);
 

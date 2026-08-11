@@ -1,6 +1,6 @@
 import { ArrowLeft, Search, Plus, Send, Check, CheckCheck, Smile, Reply, Users as UsersIcon, X, Phone, Video, MoreVertical, Mic, Paperclip, Image as ImageIcon, Lock } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -12,7 +12,11 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import CallModal from "@/components/CallModal";
+import { convertToWebP } from "@/lib/imageUtils";
+import { getCached, getSmallCached, mergeById, setCached, setSmallCached } from "@/lib/browserCache";
+
+const MESSAGE_PAGE_SIZE = 50;
+const CallModal = lazy(() => import("@/components/CallModal"));
 
 const getInitials = (name?: string | null): string => {
   if (!name) return "U";
@@ -30,7 +34,9 @@ const formatMessageDate = (dateStr: string) => {
 
 const Chats = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
+  const userId = user?.id;
   const queryClient = useQueryClient();
   const [activeRoom, setActiveRoom] = useState<any>(null);
   const [newMessage, setNewMessage] = useState("");
@@ -44,8 +50,14 @@ const Chats = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const roomChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [callMode, setCallMode] = useState<"audio" | "video" | null>(null);
+  const [hasOlderMessages, setHasOlderMessages] = useState(false);
+  const [loadingOlder, setLoadingOlder] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const autoOpenedUserRef = useRef<string | null>(null);
+  const activeRoomId = activeRoom?.id as string | undefined;
 
   // Only fetch connected friends for DM
   const { data: friendIds } = useQuery({
@@ -70,87 +82,128 @@ const Chats = () => {
   });
 
   const { data: rooms } = useQuery({
-    queryKey: ["chat-rooms"],
+    queryKey: ["chat-rooms", user?.id],
     queryFn: async () => {
       if (!user) return [];
-      const { data: memberships } = await supabase.from("chat_members").select("room_id").eq("user_id", user.id);
-      if (!memberships?.length) return [];
-      const roomIds = memberships.map((m) => m.room_id);
-      const { data: roomsData } = await supabase.from("chat_rooms").select("*").in("id", roomIds);
-
-      const enriched = await Promise.all((roomsData || []).map(async (room) => {
-        const { data: lastMsg } = await supabase.from("messages").select("content, created_at, sender_id")
-          .eq("room_id", room.id).order("created_at", { ascending: false }).limit(1);
-        let otherProfile = null;
-        if (!room.is_group) {
-          const { data: members } = await supabase.from("chat_members").select("user_id")
-            .eq("room_id", room.id).neq("user_id", user.id);
-          if (members?.[0]) {
-            const { data: prof } = await supabase.from("profiles").select("name, avatar_url")
-              .eq("user_id", members[0].user_id).maybeSingle();
-            otherProfile = prof;
-          }
-        }
-        const { data: unreadMsgs } = await supabase.from("messages").select("id")
-          .eq("room_id", room.id).not("read_by", "cs", `{${user.id}}`);
-        return {
-          ...room, lastMessage: lastMsg?.[0] || null, otherProfile,
-          unreadCount: unreadMsgs?.length || 0,
-          displayName: room.is_group ? room.name : (otherProfile?.name || "User"),
-          displayAvatar: room.is_group ? room.avatar_url : otherProfile?.avatar_url,
-        };
-      }));
-
-      return enriched.sort((a, b) => {
-        const aTime = a.lastMessage?.created_at || a.created_at;
-        const bTime = b.lastMessage?.created_at || b.created_at;
-        return new Date(bTime).getTime() - new Date(aTime).getTime();
-      });
+      const { data, error } = await supabase.rpc("get_my_chat_rooms" as any);
+      if (error) throw error;
+      const result = ((data || []) as any[]).map((row) => row.room ?? row);
+      setSmallCached(`chat-rooms:${user.id}`, result);
+      return result;
     },
     enabled: !!user,
+    initialData: () => user ? getSmallCached<any[]>(`chat-rooms:${user.id}`, 7 * 24 * 60 * 60 * 1000) ?? undefined : undefined,
+    staleTime: 15_000,
   });
 
+  const hydrateMediaUrls = useCallback(async (rows: any[]) => {
+    const paths = [...new Set(rows.map((message) => message.media_path).filter(Boolean))] as string[];
+    if (!paths.length) return rows;
+    const { data } = await supabase.storage.from("chat-media").createSignedUrls(paths, 60 * 60);
+    const urls = new Map((data || []).map((item) => [item.path, item.signedUrl]));
+    return rows.map((message) => ({ ...message, media_url: message.media_path ? urls.get(message.media_path) : undefined }));
+  }, []);
+
   useEffect(() => {
-    if (!activeRoom) return;
+    if (!userId) return;
+    const channel = supabase.channel(`chat-room-state-${userId}`)
+      .on("postgres_changes", {
+        event: "*", schema: "public", table: "chat_room_state", filter: `user_id=eq.${userId}`,
+      }, ({ new: state }: any) => {
+        queryClient.setQueryData<any[]>(["chat-rooms", userId], (current = []) => {
+          const updated = current.map((room) => room.id === state.room_id ? {
+            ...room,
+            unreadCount: state.unread_count,
+            lastMessage: state.last_message_id ? {
+              id: state.last_message_id,
+              content: state.last_content,
+              created_at: state.last_message_at,
+              sender_id: state.last_sender_id,
+            } : room.lastMessage,
+          } : room);
+          const sorted = [...updated].sort((a, b) =>
+            new Date(b.lastMessage?.created_at || b.created_at).getTime() - new Date(a.lastMessage?.created_at || a.created_at).getTime());
+          setSmallCached(`chat-rooms:${userId}`, sorted);
+          return sorted;
+        });
+      })
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [queryClient, userId]);
+
+  useEffect(() => {
+    if (!activeRoomId) return;
+    let cancelled = false;
+    const cacheKey = `chat:${userId}:${activeRoomId}`;
     const fetchMessages = async () => {
-      const { data } = await supabase.from("messages").select("*")
-        .eq("room_id", activeRoom.id).order("created_at", { ascending: true });
-      setMessages(data || []);
-      const unread = data?.filter((m) => !m.read_by?.includes(user?.id)) || [];
-      for (const msg of unread) {
-        await supabase.from("messages").update({ read_by: [...(msg.read_by || []), user?.id] }).eq("id", msg.id);
+      const cached = await getCached<any[]>(cacheKey);
+      if (!cancelled && cached?.length) setMessages(cached.slice(-200));
+      const { data, error } = await supabase.from("messages").select("*")
+        .eq("room_id", activeRoomId).is("deleted_at" as any, null)
+        .order("created_at", { ascending: false }).limit(MESSAGE_PAGE_SIZE);
+      if (error) { toast.error("Could not refresh messages"); return; }
+      let hydrated = await hydrateMediaUrls([...(data || [])].reverse());
+      const sentMessageIds = hydrated.filter((message) => message.sender_id === userId).map((message) => message.id);
+      if (sentMessageIds.length) {
+        const { data: receipts } = await supabase.from("message_receipts" as any)
+          .select("message_id,user_id,read_at")
+          .in("message_id", sentMessageIds)
+          .not("read_at", "is", null);
+        const readIds = new Set((receipts || []).filter((receipt: any) => receipt.user_id !== userId).map((receipt: any) => receipt.message_id));
+        hydrated = hydrated.map((message) => ({ ...message, is_read: readIds.has(message.id) }));
+      }
+      if (cancelled) return;
+      setHasOlderMessages((data?.length || 0) === MESSAGE_PAGE_SIZE);
+      setMessages((current) => {
+        const merged = mergeById(current.filter((message) => !String(message.id).startsWith("optimistic:")), hydrated);
+        void setCached(cacheKey, merged.slice(-200));
+        return merged;
+      });
+      if (userId) {
+        await supabase.rpc("mark_room_read" as any, { p_room_id: activeRoomId });
       }
     };
-    fetchMessages();
+    void fetchMessages();
 
     const msgChannel = supabase
-      .channel(`room-msgs-${activeRoom.id}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `room_id=eq.${activeRoom.id}` },
-        (payload) => {
-          setMessages((prev) => [...prev, payload.new]);
-          if (payload.new.sender_id !== user?.id) {
-            supabase.from("messages").update({ read_by: [...(payload.new.read_by || []), user?.id] }).eq("id", payload.new.id);
-          }
-        })
-      .subscribe();
-
-    const typingChannel = supabase
-      .channel(`room-typing-${activeRoom.id}`)
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "chat_members", filter: `room_id=eq.${activeRoom.id}` },
+      .channel(`room-msgs-${activeRoomId}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `room_id=eq.${activeRoomId}` },
         async (payload) => {
-          const updated = payload.new as any;
-          if (updated.user_id === user?.id) return;
-          if (updated.typing_at) {
-            const { data: prof } = await supabase.from("profiles").select("name").eq("user_id", updated.user_id).maybeSingle();
-            const name = prof?.name || "Someone";
-            setTypingUsers((prev) => prev.includes(name) ? prev : [...prev, name]);
-            setTimeout(() => setTypingUsers((prev) => prev.filter((n) => n !== name)), 3000);
+          const [incoming] = await hydrateMediaUrls([payload.new]);
+          setMessages((prev) => {
+            const withoutOptimisticCopy = prev.filter((message) =>
+              !incoming.client_message_id || message.client_message_id !== incoming.client_message_id);
+            const merged = mergeById(withoutOptimisticCopy, [incoming]);
+            void setCached(cacheKey, merged.slice(-200));
+            return merged;
+          });
+          if (payload.new.sender_id !== userId) {
+            void supabase.from("message_receipts" as any).upsert({
+              message_id: payload.new.id, room_id: activeRoomId, user_id: userId, delivered_at: new Date().toISOString(), read_at: new Date().toISOString(),
+            }, { onConflict: "message_id,user_id" });
           }
         })
+      .on("postgres_changes", { event: "*", schema: "public", table: "message_receipts", filter: `room_id=eq.${activeRoomId}` },
+        ({ new: receipt }: any) => {
+          if (!receipt.read_at || receipt.user_id === userId) return;
+          setMessages((current) => current.map((message) =>
+            message.id === receipt.message_id ? { ...message, is_read: true } : message));
+        })
+      .on("broadcast", { event: "typing" }, ({ payload }) => {
+        if (payload.userId === userId) return;
+        const name = payload.name || "Someone";
+        setTypingUsers((prev) => prev.includes(name) ? prev : [...prev, name]);
+        setTimeout(() => setTypingUsers((prev) => prev.filter((value) => value !== name)), 2500);
+      })
       .subscribe();
+    roomChannelRef.current = msgChannel;
 
-    return () => { supabase.removeChannel(msgChannel); supabase.removeChannel(typingChannel); };
-  }, [activeRoom?.id, user?.id]);
+    return () => {
+      cancelled = true;
+      if (roomChannelRef.current === msgChannel) roomChannelRef.current = null;
+      void supabase.removeChannel(msgChannel);
+    };
+  }, [activeRoomId, hydrateMediaUrls, userId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -158,38 +211,119 @@ const Chats = () => {
 
   const handleTyping = () => {
     if (!activeRoom || !user) return;
-    supabase.from("chat_members").update({ typing_at: new Date().toISOString() } as any).eq("room_id", activeRoom.id).eq("user_id", user.id).then();
+    void roomChannelRef.current?.send({ type: "broadcast", event: "typing", payload: { userId: user.id, name: user.user_metadata?.name } });
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-    typingTimeoutRef.current = setTimeout(() => {
-      supabase.from("chat_members").update({ typing_at: null } as any).eq("room_id", activeRoom.id).eq("user_id", user.id).then();
-    }, 2000);
+    typingTimeoutRef.current = setTimeout(() => undefined, 1200);
   };
 
   const sendMessage = async () => {
     if (!newMessage.trim() || !user || !activeRoom) return;
-    const content = replyTo ? `↩️ ${replyTo.content.substring(0, 40)}${replyTo.content.length > 40 ? "..." : ""}\n\n${newMessage}` : newMessage;
-    const { error } = await supabase.from("messages").insert({
-      content, room_id: activeRoom.id, sender_id: user.id, read_by: [user.id],
-    });
-    if (error) toast.error(error.message);
+    const content = newMessage.trim();
+    const clientMessageId = crypto.randomUUID();
+    const optimistic = {
+      id: `optimistic:${clientMessageId}`,
+      client_message_id: clientMessageId,
+      content,
+      room_id: activeRoom.id,
+      sender_id: user.id,
+      reply_to_message_id: replyTo?.id || null,
+      created_at: new Date().toISOString(),
+      status: "sending",
+      read_by: [user.id],
+    };
+    setMessages((current) => [...current, optimistic]);
     setNewMessage(""); setReplyTo(null);
-    queryClient.invalidateQueries({ queryKey: ["chat-rooms"] });
+    const { data, error } = await supabase.from("messages").insert({
+      content,
+      room_id: activeRoom.id,
+      sender_id: user.id,
+      read_by: [user.id],
+      reply_to_message_id: optimistic.reply_to_message_id,
+      client_message_id: clientMessageId,
+      status: "sent",
+    } as any).select("*").single();
+    if (error) {
+      const { data: existing } = await (supabase as any).from("messages").select("*")
+        .eq("sender_id", user.id).eq("client_message_id", clientMessageId).maybeSingle();
+      if (existing) {
+        setMessages((current) => mergeById(current.filter((message) => message.id !== optimistic.id), [existing]));
+        return;
+      }
+      setMessages((current) => current.map((message) => message.id === optimistic.id ? { ...message, status: "failed" } : message));
+      toast.error("Message was not sent. Check your connection and retry.");
+      return;
+    }
+    if (data) setMessages((current) => mergeById(current.filter((message) => message.id !== optimistic.id), [data]));
+    queryClient.invalidateQueries({ queryKey: ["chat-rooms", user.id] });
+  };
+
+  const retryMessage = async (message: any) => {
+    if (!user || !activeRoom || !message.client_message_id) return;
+    setMessages((current) => current.map((item) => item.id === message.id ? { ...item, status: "sending" } : item));
+    const { data, error } = await supabase.from("messages").insert({
+      content: message.content,
+      room_id: activeRoom.id,
+      sender_id: user.id,
+      read_by: [user.id],
+      reply_to_message_id: message.reply_to_message_id || null,
+      client_message_id: message.client_message_id,
+      status: "sent",
+    } as any).select("*").single();
+    let delivered = data;
+    if (error) {
+      const { data: existing } = await (supabase as any).from("messages").select("*")
+        .eq("sender_id", user.id).eq("client_message_id", message.client_message_id).maybeSingle();
+      delivered = existing;
+    }
+    if (!delivered) {
+      setMessages((current) => current.map((item) => item.id === message.id ? { ...item, status: "failed" } : item));
+      toast.error("Still offline. Try again when your connection returns.");
+      return;
+    }
+    setMessages((current) => mergeById(current.filter((item) => item.id !== message.id), [delivered]));
   };
 
   const sendImage = async (file: File) => {
     if (!user || !activeRoom) return;
+    if (file.size > 15 * 1024 * 1024) { toast.error("Image must be smaller than 15 MB"); return; }
+    setUploadingImage(true);
     try {
-      const path = `${user.id}/${Date.now()}-${file.name}`;
-      const { error: upErr } = await supabase.storage.from("post-images").upload(path, file);
-      if (upErr) throw upErr;
-      const { data: urlData } = supabase.storage.from("post-images").getPublicUrl(path);
-      await supabase.from("messages").insert({
-        content: `📷 ${urlData.publicUrl}`, room_id: activeRoom.id, sender_id: user.id, read_by: [user.id],
+      const webp = await convertToWebP(file, 0.78, 1600);
+      const path = `${activeRoom.id}/${user.id}/${crypto.randomUUID()}.webp`;
+      const { error: upErr } = await supabase.storage.from("chat-media").upload(path, webp, {
+        contentType: "image/webp",
+        cacheControl: "31536000",
+        upsert: false,
       });
-      queryClient.invalidateQueries({ queryKey: ["chat-rooms"] });
+      if (upErr) throw upErr;
+      await supabase.from("messages").insert({
+        content: "", room_id: activeRoom.id, sender_id: user.id, read_by: [user.id],
+        client_message_id: crypto.randomUUID(), media_path: path, media_type: "image/webp", status: "sent",
+      } as any);
+      queryClient.invalidateQueries({ queryKey: ["chat-rooms", user.id] });
     } catch (err: any) {
       toast.error(err.message);
+    } finally {
+      setUploadingImage(false);
     }
+  };
+
+  const loadOlderMessages = async () => {
+    if (!activeRoom || loadingOlder || !messages.length) return;
+    setLoadingOlder(true);
+    const oldest = messages.find((message) => !String(message.id).startsWith("optimistic:"));
+    const { data, error } = await supabase.from("messages").select("*")
+      .eq("room_id", activeRoom.id)
+      .lt("created_at", oldest?.created_at || new Date().toISOString())
+      .is("deleted_at" as any, null)
+      .order("created_at", { ascending: false })
+      .limit(MESSAGE_PAGE_SIZE);
+    if (!error) {
+      const hydrated = await hydrateMediaUrls([...(data || [])].reverse());
+      setMessages((current) => mergeById(hydrated, current));
+      setHasOlderMessages((data?.length || 0) === MESSAGE_PAGE_SIZE);
+    }
+    setLoadingOlder(false);
   };
 
   // Group creation: user can only add people who share a common connection with all members
@@ -207,44 +341,37 @@ const Chats = () => {
       toast.error("You can only create groups with your connections");
       return;
     }
-    const { data: room, error: roomError } = await supabase.from("chat_rooms").insert({
-      name: groupName, is_group: true, created_by: user.id,
-    }).select().single();
+    const { error: roomError } = await supabase.rpc("create_group_room" as any, {
+      p_name: groupName.trim(), p_member_ids: selectedMembers,
+    });
     if (roomError) { toast.error(roomError.message); return; }
-    const members = [...selectedMembers, user.id].map((uid) => ({ room_id: room.id, user_id: uid }));
-    await supabase.from("chat_members").insert(members);
     setShowCreateGroup(false); setGroupName(""); setSelectedMembers([]);
-    queryClient.invalidateQueries({ queryKey: ["chat-rooms"] });
+    queryClient.invalidateQueries({ queryKey: ["chat-rooms", user.id] });
     toast.success("Group created!");
   };
 
-  const startDM = async (otherUserId: string) => {
+  const startDM = useCallback(async (otherUserId: string) => {
     if (!user) return;
     // Check if other user is a friend
     if (!friendIds?.includes(otherUserId)) {
       toast.error("You can only message your connections");
       return;
     }
-    const { data: myRooms } = await supabase.from("chat_members").select("room_id").eq("user_id", user.id);
-    const { data: theirRooms } = await supabase.from("chat_members").select("room_id").eq("user_id", otherUserId);
-    const myRoomIds = myRooms?.map(r => r.room_id) || [];
-    const theirRoomIds = theirRooms?.map(r => r.room_id) || [];
-    const shared = myRoomIds.filter(id => theirRoomIds.includes(id));
-    if (shared.length > 0) {
-      const { data: existingDM } = await supabase.from("chat_rooms").select("*").in("id", shared).eq("is_group", false).limit(1);
-      if (existingDM?.[0]) {
-        const enriched = { ...existingDM[0], displayName: friendProfiles?.find(p => p.user_id === otherUserId)?.name || "User", displayAvatar: friendProfiles?.find(p => p.user_id === otherUserId)?.avatar_url };
-        setActiveRoom(enriched); return;
-      }
-    }
-    const { data: room } = await supabase.from("chat_rooms").insert({ is_group: false, created_by: user.id }).select().single();
-    if (room) {
-      await supabase.from("chat_members").insert([{ room_id: room.id, user_id: user.id }, { room_id: room.id, user_id: otherUserId }]);
-      const enriched = { ...room, displayName: friendProfiles?.find(p => p.user_id === otherUserId)?.name || "User", displayAvatar: friendProfiles?.find(p => p.user_id === otherUserId)?.avatar_url };
-      setActiveRoom(enriched);
-      queryClient.invalidateQueries({ queryKey: ["chat-rooms"] });
-    }
-  };
+    const { data: roomId, error } = await supabase.rpc("get_or_create_direct_room" as any, { p_other_user_id: otherUserId });
+    if (error || !roomId) { toast.error(error?.message || "Could not open chat"); return; }
+    const profile = friendProfiles?.find((item) => item.user_id === otherUserId);
+    setActiveRoom({ id: roomId, is_group: false, displayName: profile?.name || "User", displayAvatar: profile?.avatar_url });
+    queryClient.invalidateQueries({ queryKey: ["chat-rooms", user.id] });
+  }, [friendIds, friendProfiles, queryClient, user]);
+
+  useEffect(() => {
+    const targetUserId = searchParams.get("user");
+    if (!targetUserId || !friendIds || autoOpenedUserRef.current === targetUserId) return;
+    autoOpenedUserRef.current = targetUserId;
+    void startDM(targetUserId).finally(() => {
+      setSearchParams({}, { replace: true });
+    });
+  }, [friendIds, searchParams, setSearchParams, startDM]);
 
   const groupedMessages = messages.reduce<{ date: string; msgs: any[] }[]>((acc, msg) => {
     const dateStr = formatMessageDate(msg.created_at);
@@ -286,6 +413,13 @@ const Chats = () => {
         </header>
 
         <div className="flex-1 overflow-y-auto px-3 py-4 chat-wallpaper">
+          {hasOlderMessages && (
+            <div className="flex justify-center pb-2">
+              <Button variant="secondary" size="sm" onClick={loadOlderMessages} disabled={loadingOlder}>
+                {loadingOlder ? "Loading…" : "Load earlier messages"}
+              </Button>
+            </div>
+          )}
           {groupedMessages.map((group, gi) => (
             <div key={gi}>
               <div className="flex items-center justify-center my-3">
@@ -293,10 +427,12 @@ const Chats = () => {
               </div>
               {group.msgs.map((msg) => {
                 const isMine = msg.sender_id === user?.id;
-                const isRead = msg.read_by?.length > 1;
-                const hasReply = msg.content.startsWith("↩️");
-                const isImage = msg.content.startsWith("📷 http");
-                const imageUrl = isImage ? msg.content.replace("📷 ", "") : null;
+                const isRead = msg.is_read || msg.read_by?.length > 1;
+                const hasLegacyReply = msg.content?.startsWith("↩️");
+                const repliedMessage = msg.reply_to_message_id ? messages.find((item) => item.id === msg.reply_to_message_id) : null;
+                const hasReply = Boolean(repliedMessage) || hasLegacyReply;
+                const isLegacyImage = msg.content?.startsWith("📷 http");
+                const imageUrl = msg.media_url || (isLegacyImage ? msg.content.replace("📷 ", "") : null);
 
                 return (
                   <div key={msg.id} className={`flex ${isMine ? "justify-end" : "justify-start"} mb-1`}>
@@ -305,19 +441,23 @@ const Chats = () => {
                         isMine ? "bg-primary text-primary-foreground rounded-br-md" : "bg-card text-foreground rounded-bl-md"
                       }`}
                     >
-                      {hasReply && !isImage && (
+                      {hasReply && !imageUrl && (
                         <div className={`text-[11px] mb-1 px-2 py-1 rounded-lg border-l-2 ${isMine ? "bg-white/10 border-white/30" : "bg-muted border-primary/30"}`}>
-                          {msg.content.split("\n\n")[0].replace("↩️ ", "")}
+                          {repliedMessage?.content || msg.content.split("\n\n")[0].replace("↩️ ", "")}
                         </div>
                       )}
-                      {isImage ? (
+                      {imageUrl ? (
                         <img src={imageUrl!} alt="Shared" className="rounded-xl max-h-48 object-cover" loading="lazy" />
                       ) : (
-                        <p className="text-sm leading-relaxed">{hasReply ? msg.content.split("\n\n").slice(1).join("\n\n") : msg.content}</p>
+                        <p className="text-sm leading-relaxed">{hasLegacyReply ? msg.content.split("\n\n").slice(1).join("\n\n") : msg.content}</p>
                       )}
                       <div className={`flex items-center justify-end gap-1 mt-0.5 ${isMine ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
                         <span className="text-[10px]">{new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
-                        {isMine && (isRead ? <CheckCheck className="w-3.5 h-3.5 text-blue-300" /> : <Check className="w-3.5 h-3.5" />)}
+                        {isMine && msg.status === "sending" && <span className="text-[9px]">Sending…</span>}
+                        {isMine && msg.status === "failed" && (
+                          <button className="text-[9px] underline" onClick={() => void retryMessage(msg)}>Retry</button>
+                        )}
+                        {isMine && msg.status !== "sending" && msg.status !== "failed" && (isRead ? <CheckCheck className="w-3.5 h-3.5 text-blue-300" /> : <Check className="w-3.5 h-3.5" />)}
                       </div>
                       <button onClick={() => setReplyTo(msg)}
                         className="absolute -top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-card border border-border rounded-full p-1 shadow-sm">
@@ -342,7 +482,7 @@ const Chats = () => {
 
         <div className="sticky bottom-0 bg-card border-t border-border px-2 py-2 flex items-center gap-2">
           <button className="p-2 text-muted-foreground hover:text-foreground"><Smile className="w-5 h-5" /></button>
-          <button onClick={() => fileInputRef.current?.click()} className="p-2 text-muted-foreground hover:text-foreground"><Paperclip className="w-5 h-5" /></button>
+          <button disabled={uploadingImage} onClick={() => fileInputRef.current?.click()} className="p-2 text-muted-foreground hover:text-foreground disabled:opacity-40"><Paperclip className="w-5 h-5" /></button>
           <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => {
             const file = e.target.files?.[0];
             if (file) sendImage(file);
@@ -365,6 +505,11 @@ const Chats = () => {
             </button>
           )}
         </div>
+        {callMode && (
+          <Suspense fallback={null}>
+            <CallModal roomId={activeRoom.id} mode={callMode} onClose={() => setCallMode(null)} />
+          </Suspense>
+        )}
       </div>
     );
   }
@@ -496,7 +641,9 @@ const Chats = () => {
         )}
       </main>
       {callMode && activeRoom && (
-        <CallModal roomId={activeRoom.id} mode={callMode} onClose={() => setCallMode(null)} />
+        <Suspense fallback={null}>
+          <CallModal roomId={activeRoom.id} mode={callMode} onClose={() => setCallMode(null)} />
+        </Suspense>
       )}
     </div>
   );

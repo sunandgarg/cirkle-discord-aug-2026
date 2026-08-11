@@ -4,7 +4,9 @@ The chat client keeps the latest 200 messages per room in IndexedDB, reads only 
 
 Images are resized in the browser, encoded as WebP, and stored in the private `chat-media` bucket with immutable object caching. The database stores only the media path. Access uses short-lived signed URLs.
 
-Direct and group room creation is transactional and connection-gated in database functions. Message writes are membership-checked, idempotent through `client_message_id`, rate-limited, and indexed for room cursor reads. Read receipts are normalized instead of rewriting an array on every message.
+Direct room creation is transactional and connection-gated in a database function. Message writes are membership-checked, idempotent through `client_message_id`, rate-limited, and indexed for room cursor reads. Read receipts are normalized instead of rewriting an array on every message.
+
+Authenticated users cannot create rooms or memberships directly. College, course, specialisation, and passing-year cohort rooms are created and assigned by server-side profile/education logic. One-to-one rooms are the only user-initiated room type, and the database creates them only for accepted connections.
 
 ## Capacity verification
 

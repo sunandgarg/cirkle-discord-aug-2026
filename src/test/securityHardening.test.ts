@@ -36,4 +36,13 @@ describe("privileged edge-function guards", () => {
     expect(sql).toContain("primary key (post_id, user_id)");
     expect(sql).toContain("create trigger enforce_forum_post_rate_limit");
   });
+
+  it("keeps room creation server-managed and cohort-assigned", () => {
+    const sql = source("supabase/migrations/202608120003_managed_chat_rooms.sql");
+    expect(sql).toContain("revoke insert, update, delete on public.chat_rooms from anon, authenticated");
+    expect(sql).toContain("revoke insert, update, delete on public.chat_members from anon, authenticated");
+    expect(sql).toContain("revoke execute on function public.create_group_room(text, uuid[]) from authenticated");
+    expect(sql).toContain("create or replace function public.sync_user_assigned_chat_rooms");
+    expect(sql).toContain("after insert or update of institution, degree, branch_area, passing_year or delete on public.education");
+  });
 });

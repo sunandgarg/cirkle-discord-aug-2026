@@ -1,6 +1,6 @@
-import { ArrowLeft, Search, Plus, Send, Check, CheckCheck, Smile, Reply, Users as UsersIcon, X, Phone, Video, MoreVertical, Mic, Paperclip, Image as ImageIcon, Lock } from "lucide-react";
+import { ArrowLeft, Search, Send, Check, CheckCheck, Smile, Reply, X, Phone, Video, MoreVertical, Mic, Paperclip, Image as ImageIcon } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from "react";
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -8,10 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow, format, isToday, isYesterday } from "date-fns";
 import { toast } from "sonner";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
-} from "@/components/ui/dialog";
-import { Checkbox } from "@/components/ui/checkbox";
 import { convertToWebP } from "@/lib/imageUtils";
 import { getCached, getSmallCached, mergeById, setCached, setSmallCached } from "@/lib/browserCache";
 
@@ -43,9 +39,6 @@ const Chats = () => {
   const [messages, setMessages] = useState<any[]>([]);
   const [tab, setTab] = useState<"messages" | "groups">("messages");
   const [replyTo, setReplyTo] = useState<any>(null);
-  const [showCreateGroup, setShowCreateGroup] = useState(false);
-  const [groupName, setGroupName] = useState("");
-  const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -85,6 +78,11 @@ const Chats = () => {
     queryKey: ["chat-rooms", user?.id],
     queryFn: async () => {
       if (!user) return [];
+      if (!getSmallCached(`assigned-chat-sync-v1:${user.id}`, 365 * 24 * 60 * 60 * 1000)) {
+        const { error: syncError } = await supabase.rpc("sync_my_assigned_chat_rooms" as any);
+        if (syncError) throw syncError;
+        setSmallCached(`assigned-chat-sync-v1:${user.id}`, true);
+      }
       const { data, error } = await supabase.rpc("get_my_chat_rooms" as any);
       if (error) throw error;
       const result = ((data || []) as any[]).map((row) => row.room ?? row);
@@ -111,6 +109,10 @@ const Chats = () => {
         event: "*", schema: "public", table: "chat_room_state", filter: `user_id=eq.${userId}`,
       }, ({ new: state }: any) => {
         queryClient.setQueryData<any[]>(["chat-rooms", userId], (current = []) => {
+          if (!current.some((room) => room.id === state.room_id)) {
+            queueMicrotask(() => queryClient.invalidateQueries({ queryKey: ["chat-rooms", userId] }));
+            return current;
+          }
           const updated = current.map((room) => room.id === state.room_id ? {
             ...room,
             unreadCount: state.unread_count,
@@ -326,30 +328,6 @@ const Chats = () => {
     setLoadingOlder(false);
   };
 
-  // Group creation: user can only add people who share a common connection with all members
-  // Simplified rule: all selected members must be friends of the creator
-  // AND at least one common friend must exist between the creator and each member
-  const canCreateGroupWithMembers = useMemo(() => {
-    if (!friendIds || selectedMembers.length === 0) return false;
-    // All selected members must be friends of creator
-    return selectedMembers.every(id => friendIds.includes(id));
-  }, [friendIds, selectedMembers]);
-
-  const createGroup = async () => {
-    if (!groupName.trim() || selectedMembers.length === 0 || !user) return;
-    if (!canCreateGroupWithMembers) {
-      toast.error("You can only create groups with your connections");
-      return;
-    }
-    const { error: roomError } = await supabase.rpc("create_group_room" as any, {
-      p_name: groupName.trim(), p_member_ids: selectedMembers,
-    });
-    if (roomError) { toast.error(roomError.message); return; }
-    setShowCreateGroup(false); setGroupName(""); setSelectedMembers([]);
-    queryClient.invalidateQueries({ queryKey: ["chat-rooms", user.id] });
-    toast.success("Group created!");
-  };
-
   const startDM = useCallback(async (otherUserId: string) => {
     if (!user) return;
     // Check if other user is a friend
@@ -526,40 +504,12 @@ const Chats = () => {
               <button onClick={() => navigate(-1)} className="p-1 text-primary-foreground hover-scale"><ArrowLeft className="w-5 h-5" /></button>
               <h1 className="text-xl font-bold text-primary-foreground">Chats</h1>
             </div>
-            <div className="flex items-center gap-1">
-              <button className="p-2 text-primary-foreground hover-scale"><Search className="w-5 h-5" /></button>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <button className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center hover-scale"><Plus className="w-5 h-5 text-primary-foreground" /></button>
-                </DialogTrigger>
-                <DialogContent className="max-w-sm">
-                  <DialogHeader><DialogTitle>New Conversation</DialogTitle></DialogHeader>
-                  <div className="space-y-2 max-h-[50vh] overflow-y-auto">
-                    <Button variant="outline" className="w-full justify-start gap-2" onClick={() => setShowCreateGroup(true)}>
-                      <UsersIcon className="w-4 h-4" /> Create Group
-                    </Button>
-                    <p className="text-xs text-muted-foreground pt-2 px-1 flex items-center gap-1">
-                      <Lock className="w-3 h-3" /> Only your connections
-                    </p>
-                    {friendProfiles?.length ? friendProfiles.map((p: any) => (
-                      <button key={p.user_id} onClick={() => startDM(p.user_id)}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-muted/50 transition-colors">
-                        {p.avatar_url ? <img src={p.avatar_url} className="w-9 h-9 rounded-full object-cover" alt="" />
-                          : <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center"><span className="text-xs font-bold text-primary">{getInitials(p.name)}</span></div>}
-                        <span className="text-sm font-medium text-foreground">{p.name || "User"}</span>
-                      </button>
-                    )) : (
-                      <p className="text-xs text-muted-foreground text-center py-4">No connections yet. Connect with people first!</p>
-                    )}
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </div>
+            <span className="text-[11px] text-primary-foreground/70">Rooms assigned automatically</span>
           </div>
           <div className="max-w-lg mx-auto pb-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary-foreground/50" />
-              <input placeholder="Search or start new chat" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+              <input placeholder="Search your chats" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full h-9 pl-10 pr-4 rounded-lg bg-white/15 text-primary-foreground text-sm placeholder:text-primary-foreground/50 border-0 outline-none focus:bg-white/25 transition-colors" />
             </div>
           </div>
@@ -569,38 +519,6 @@ const Chats = () => {
           <button onClick={() => setTab("groups")} className={`flex-1 text-sm font-semibold py-3 border-b-2 transition-colors ${tab === "groups" ? "border-white text-primary-foreground" : "border-transparent text-primary-foreground/50"}`}>Groups</button>
         </div>
       </header>
-
-      {showCreateGroup && (
-        <div className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-sm flex flex-col">
-          <div className="flex items-center gap-3 px-4 py-4 border-b border-border">
-            <button onClick={() => setShowCreateGroup(false)} className="text-foreground"><ArrowLeft className="w-5 h-5" /></button>
-            <h2 className="text-lg font-bold text-foreground flex-1">New Group</h2>
-            <Button size="sm" disabled={!groupName.trim() || selectedMembers.length === 0 || !canCreateGroupWithMembers} onClick={createGroup} className="rounded-full">Create</Button>
-          </div>
-          <div className="px-4 py-3">
-            <Input placeholder="Group subject" value={groupName} onChange={(e) => setGroupName(e.target.value)} className="h-11 rounded-xl bg-secondary border-0 mb-3" />
-            <p className="text-xs text-muted-foreground mb-1">Add from your connections ({selectedMembers.length} selected)</p>
-            <p className="text-[10px] text-muted-foreground/70 flex items-center gap-1"><Lock className="w-3 h-3" /> Only your connections can be added to groups</p>
-          </div>
-          <div className="flex-1 overflow-y-auto px-4 space-y-1">
-            {friendProfiles?.map((p: any) => {
-              const isSelected = selectedMembers.includes(p.user_id);
-              return (
-                <button key={p.user_id} onClick={() => setSelectedMembers(prev => isSelected ? prev.filter(id => id !== p.user_id) : [...prev, p.user_id])}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${isSelected ? "bg-primary/10" : "hover:bg-muted/50"}`}>
-                  <Checkbox checked={isSelected} className="pointer-events-none" />
-                  {p.avatar_url ? <img src={p.avatar_url} className="w-9 h-9 rounded-full object-cover" alt="" />
-                    : <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center"><span className="text-xs font-bold text-primary">{getInitials(p.name)}</span></div>}
-                  <span className="text-sm font-medium text-foreground">{p.name || "User"}</span>
-                </button>
-              );
-            })}
-            {(!friendProfiles || friendProfiles.length === 0) && (
-              <p className="text-xs text-muted-foreground text-center py-8">No connections to add. Connect with people first!</p>
-            )}
-          </div>
-        </div>
-      )}
 
       <main className="max-w-lg mx-auto">
         {filteredRooms.length > 0 ? filteredRooms.map((room: any, i: number) => (
@@ -636,7 +554,7 @@ const Chats = () => {
         )) : (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <p className="text-muted-foreground text-sm">No conversations yet</p>
-            <p className="text-xs text-muted-foreground mt-1">Tap + to start chatting with your connections</p>
+            <p className="text-xs text-muted-foreground mt-1">Your assigned rooms will appear here automatically</p>
           </div>
         )}
       </main>

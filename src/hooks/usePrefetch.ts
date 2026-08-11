@@ -25,12 +25,12 @@ export const usePrefetch = (userId: string | undefined, profile: any) => {
       queryClient.prefetchQuery({
         queryKey: ["forum-posts", "global", userIit, cohortKey],
         queryFn: async () => {
-          const { data } = await supabase.from("posts").select("*").eq("channel", "global").order("created_at", { ascending: true }).limit(50);
+          const { data } = await supabase.from("forum_posts_public" as any).select("*").eq("channel", "global").order("created_at", { ascending: true }).limit(50);
           if (!data?.length) return [];
-          const ids = [...new Set(data.map((p) => p.author_id))];
+          const ids = [...new Set(data.filter((p: any) => !p.is_anonymous && p.author_id).map((p: any) => p.author_id))] as string[];
           const { data: profiles } = await supabase.from("profiles").select("user_id, name, avatar_url, iit_name, student_status").in("user_id", ids);
           const map = new Map(profiles?.map((p) => [p.user_id, p]) ?? []);
-          return data.map((post) => ({ ...post, profile: map.get(post.author_id) ?? null }));
+          return data.map((post: any) => ({ ...post, profile: post.is_anonymous ? null : (map.get(post.author_id) ?? null) }));
         },
         staleTime: Infinity,
       });
@@ -39,12 +39,12 @@ export const usePrefetch = (userId: string | undefined, profile: any) => {
         queryClient.prefetchQuery({
           queryKey: ["forum-posts", "campus", userIit, cohortKey],
           queryFn: async () => {
-            const { data } = await supabase.from("posts").select("*").eq("channel", "campus").eq("campus_filter", userIit).order("created_at", { ascending: true }).limit(50);
+            const { data } = await supabase.from("forum_posts_public" as any).select("*").eq("channel", "campus").eq("campus_filter", userIit).order("created_at", { ascending: true }).limit(50);
             if (!data?.length) return [];
-            const ids = [...new Set(data.map((p) => p.author_id))];
+            const ids = [...new Set(data.filter((p: any) => !p.is_anonymous && p.author_id).map((p: any) => p.author_id))] as string[];
             const { data: profiles } = await supabase.from("profiles").select("user_id, name, avatar_url, iit_name, student_status").in("user_id", ids);
             const map = new Map(profiles?.map((p) => [p.user_id, p]) ?? []);
-            return data.map((post) => ({ ...post, profile: map.get(post.author_id) ?? null }));
+            return data.map((post: any) => ({ ...post, profile: post.is_anonymous ? null : (map.get(post.author_id) ?? null) }));
           },
           staleTime: Infinity,
         });
@@ -54,12 +54,12 @@ export const usePrefetch = (userId: string | undefined, profile: any) => {
         queryClient.prefetchQuery({
           queryKey: ["forum-posts", "cohort", userIit, cohortKey],
           queryFn: async () => {
-            const { data } = await supabase.from("posts").select("*").eq("channel", "cohort").eq("cohort_filter", cohortKey).order("created_at", { ascending: true }).limit(50);
+            const { data } = await supabase.from("forum_posts_public" as any).select("*").eq("channel", "cohort").eq("cohort_filter", cohortKey).order("created_at", { ascending: true }).limit(50);
             if (!data?.length) return [];
-            const ids = [...new Set(data.map((p) => p.author_id))];
+            const ids = [...new Set(data.filter((p: any) => !p.is_anonymous && p.author_id).map((p: any) => p.author_id))] as string[];
             const { data: profiles } = await supabase.from("profiles").select("user_id, name, avatar_url, iit_name, student_status").in("user_id", ids);
             const map = new Map(profiles?.map((p) => [p.user_id, p]) ?? []);
-            return data.map((post) => ({ ...post, profile: map.get(post.author_id) ?? null }));
+            return data.map((post: any) => ({ ...post, profile: post.is_anonymous ? null : (map.get(post.author_id) ?? null) }));
           },
           staleTime: Infinity,
         });

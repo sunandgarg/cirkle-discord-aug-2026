@@ -143,7 +143,7 @@ const Profile = () => {
     queryFn: async () => {
       if (!targetId) return { posts: 0, connections: 0, sessions: 0 };
       const [postsRes, connectionsRes, sessionsRes] = await Promise.all([
-        supabase.from("posts").select("id", { count: "exact", head: true }).eq("author_id", targetId),
+        supabase.from("posts").select("id", { count: "exact", head: true }).eq("author_id", targetId).eq("is_anonymous", false),
         supabase.from("connections").select("id", { count: "exact", head: true })
           .or(`requester_id.eq.${targetId},receiver_id.eq.${targetId}`).eq("status", "accepted"),
         supabase.from("consultations").select("id", { count: "exact", head: true })

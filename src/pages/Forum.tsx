@@ -28,6 +28,7 @@ import FileAttachment from "@/components/forum/FileAttachment";
 import ThreadPanel from "@/components/forum/ThreadPanel";
 import { getCachedPosts, setCachedPosts, getUnreadChannels, setChannelRead, setChannelUnread } from "@/hooks/useForumCache";
 import { useScrollBehavior } from "@/hooks/useScrollBehavior";
+import { buildReadReceiptRows, visibleAuthorIds } from "@/lib/forumPrivacy";
 
 /* ─── Types ─── */
 interface ScopeDef {
@@ -140,7 +141,7 @@ const buildScopes = (profile: any, education: any): ScopeDef[] => {
 
 /* ─── Build query for a scope ─── */
 const buildScopeQuery = (scopeType: string, scopeKey: string, limit = 50, beforeDate?: string) => {
-  let q = supabase.from("posts").select("*")
+  let q = supabase.from("forum_posts_public" as any).select("*")
     .is("reply_to_id", null)
     .is("deleted_at", null)
     .order("created_at", { ascending: false }).limit(limit) as any;
@@ -539,7 +540,8 @@ const Forum = () => {
       const q = buildScopeQuery(activeScope.type, activeScope.key);
       const { data: posts } = await q;
       if (!posts?.length) return [];
-      const authorIds = [...new Set((posts as any[]).map((p: any) => p.author_id))].slice(0, 30) as string[];
+      const authorIds = visibleAuthorIds(posts as any[]).slice(0, 30);
+      if (!authorIds.length) return [];
       const { data: profiles } = await supabase.from("profiles").select("user_id, name, avatar_url, headline, iit_name, is_verified, slug").in("user_id", authorIds);
       return profiles || [];
     },
@@ -591,16 +593,19 @@ const Forum = () => {
   const enrichPosts = useCallback(async (postsData: any[]) => {
     if (!postsData?.length) return [];
     const postIds = postsData.map((p: any) => p.id);
-    const authorIds = [...new Set(postsData.map((p: any) => p.author_id))] as string[];
+    const authorIds = visibleAuthorIds(postsData);
 
-    const [{ data: profiles }, { data: polls }, { data: replies }, { data: reactions }] = await Promise.all([
-      supabase.from("profiles").select("user_id, name, avatar_url, iit_name, student_status, slug").in("user_id", authorIds),
+    const [{ data: profiles }, { data: polls }, { data: replies }, { data: reactions }, { data: reads }] = await Promise.all([
+      authorIds.length
+        ? supabase.from("profiles").select("user_id, name, avatar_url, iit_name, student_status, slug").in("user_id", authorIds)
+        : Promise.resolve({ data: [] }),
       supabase.from("polls").select("*").in("post_id", postIds),
       supabase.from("posts").select("id, reply_to_id").in("reply_to_id", postIds).is("deleted_at", null),
       supabase.from("reactions").select("*").in("entity_id", postIds).eq("entity_type", "forum_msg"),
+      supabase.from("message_reads" as any).select("post_id, user_id").in("post_id", postIds),
     ]);
 
-    const pMap = new Map(profiles?.map((p) => [p.user_id, p]) ?? []);
+    const pMap = new Map<string, any>((profiles as any[] | null)?.map((p: any) => [p.user_id, p] as const) ?? []);
     const pollMap = new Map(polls?.map((p: any) => [p.post_id, p]) ?? []);
     const replyCountMap = new Map<string, number>();
     (replies as any[])?.forEach((r: any) => replyCountMap.set(r.reply_to_id, (replyCountMap.get(r.reply_to_id) || 0) + 1));
@@ -611,6 +616,10 @@ const Forum = () => {
       if (!map[emoji]) map[emoji] = [];
       map[emoji].push(r.user_id);
       reactionMap.set(r.entity_id, map);
+    });
+    const readMap = new Map<string, string[]>();
+    (reads as any[] | null)?.forEach((read: any) => {
+      readMap.set(read.post_id, [...(readMap.get(read.post_id) || []), read.user_id]);
     });
 
     let userDeletedIds: string[] = [];
@@ -636,11 +645,12 @@ const Forum = () => {
         });
         return {
           ...post,
-          profile: pMap.get(post.author_id) ?? null,
+          profile: post.is_anonymous ? null : (pMap.get(post.author_id) ?? null),
           poll: pollMap.get(post.id) ?? null,
           replyCount: replyCountMap.get(post.id) || 0,
           reactions: rxCounts,
           myReactions: myRx,
+          seen_by: readMap.get(post.id) || [],
         };
       });
   }, [user?.id]);
@@ -700,14 +710,8 @@ const Forum = () => {
       !isDemoId(p.id) && p.author_id !== user.id && !(p.seen_by || []).includes(user.id)
     );
     if (unseenPosts.length === 0) return;
-    unseenPosts.slice(0, 20).forEach(async (post: any) => {
-      const currentSeenBy = (post?.seen_by || []) as string[];
-      if (!currentSeenBy.includes(user.id)) {
-        await supabase.from("posts").update({
-          seen_by: [...currentSeenBy, user.id]
-        } as any).eq("id", post.id);
-      }
-    });
+    const rows = buildReadReceiptRows(unseenPosts.slice(0, 20).map((post: any) => post.id), user.id);
+    void supabase.from("message_reads" as any).upsert(rows, { onConflict: "post_id,user_id", ignoreDuplicates: true });
   }, [posts, user?.id]);
 
   /* ─── Mutations ─── */
@@ -1240,7 +1244,7 @@ const Forum = () => {
       {/* ═══ MAIN CHAT AREA ═══ */}
       <div className="flex-1 flex flex-col min-w-0 relative overflow-x-hidden">
         {/* ── Header (48px) with scroll hide ── */}
-        <div className={`h-12 flex items-center gap-2 px-3 border-b border-border bg-card flex-shrink-0 z-10 transition-transform duration-[250ms] ease-in-out ${showHeader ? 'translate-y-0' : '-translate-y-full'}`}>
+        <div className={`h-12 flex items-center gap-2 px-3 border-b border-border bg-card flex-shrink-0 z-10 transition-transform duration-250 ease-in-out ${showHeader ? 'translate-y-0' : '-translate-y-full'}`}>
           <button onClick={() => setSidebarOpen(true)} className="lg:hidden w-9 h-9 flex items-center justify-center rounded-lg hover:bg-accent active:scale-95 transition-all" aria-label="Open menu">
             <img src="/cirkle-logo.png" alt="Cirkle" className="w-7 h-7 rounded-md" />
           </button>
@@ -1480,7 +1484,7 @@ const Forum = () => {
 
         {/* ── Ultra-smooth Composer (FIX 2) ── */}
         {canPost && !editingPost && (
-          <div className={`backdrop-blur-xl bg-card/95 border-t border-border/60 px-3 py-2 flex-shrink-0 safe-bottom transition-transform duration-[250ms] ease-in-out ${showInput ? 'translate-y-0' : 'translate-y-full absolute bottom-0 left-0 right-0'}`}>
+          <div className={`backdrop-blur-xl bg-card/95 border-t border-border/60 px-3 py-2 flex-shrink-0 safe-bottom transition-transform duration-250 ease-in-out ${showInput ? 'translate-y-0' : 'translate-y-full absolute bottom-0 left-0 right-0'}`}>
             {/* Reply preview */}
             {replyTo && (
               <div className="flex items-center bg-accent/80 rounded-t-lg mb-1 overflow-hidden animate-fade-in">
@@ -1762,7 +1766,7 @@ const Forum = () => {
       {showAttachMenu && <div className="fixed inset-0 z-10" onClick={() => setShowAttachMenu(false)} />}
       </div>
       {/* Forum's own bottom nav with scroll hide */}
-      <div className={`lg:hidden flex-shrink-0 transition-transform duration-[250ms] ease-in-out ${showNavBar ? 'translate-y-0' : 'translate-y-full'}`}>
+      <div className={`lg:hidden flex-shrink-0 transition-transform duration-250 ease-in-out ${showNavBar ? 'translate-y-0' : 'translate-y-full'}`}>
         <BottomNav />
       </div>
     </div>

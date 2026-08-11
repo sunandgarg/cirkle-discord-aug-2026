@@ -44,7 +44,7 @@ const ThreadPanel = ({ parentPost, onClose, activeScope, profileMap, navigate }:
   const { data: replies = [], isLoading } = useQuery({
     queryKey: ["thread-replies", parentPost.id],
     queryFn: async () => {
-      const { data: repliesData } = await supabase.from("posts")
+      const { data: repliesData } = await supabase.from("forum_posts_public" as any)
         .select("*")
         .eq("reply_to_id", parentPost.id)
         .is("deleted_at", null)
@@ -52,7 +52,9 @@ const ThreadPanel = ({ parentPost, onClose, activeScope, profileMap, navigate }:
 
       if (!repliesData?.length) return [];
 
-      const authorIds = [...new Set(repliesData.map((r: any) => r.author_id))] as string[];
+      const authorIds = [...new Set(repliesData
+        .filter((r: any) => !r.is_anonymous && r.author_id)
+        .map((r: any) => r.author_id))] as string[];
       const { data: profiles } = await supabase.from("profiles")
         .select("user_id, name, avatar_url, slug")
         .in("user_id", authorIds);
@@ -61,7 +63,7 @@ const ThreadPanel = ({ parentPost, onClose, activeScope, profileMap, navigate }:
 
       return repliesData.map((r: any) => ({
         ...r,
-        profile: pMap.get(r.author_id) ?? null,
+        profile: r.is_anonymous ? null : (pMap.get(r.author_id) ?? null),
       }));
     },
     staleTime: 10000,

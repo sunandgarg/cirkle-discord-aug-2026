@@ -61,7 +61,7 @@ const GlobalSearch = ({ open, onClose }: GlobalSearchProps) => {
       const [profiles, jobs, posts, events] = await Promise.all([
         supabase.from("profiles").select("user_id, name, headline, avatar_url").or(`name.ilike.${q},headline.ilike.${q}`).limit(5),
         supabase.from("jobs").select("id, title, company, location").or(`title.ilike.${q},company.ilike.${q}`).limit(5),
-        supabase.from("posts").select("id, content, author_id").ilike("content", q).limit(5),
+        supabase.from("posts").select("id, content").eq("is_anonymous", false).ilike("content", q).limit(5),
         supabase.from("events").select("id, title, location, start_time").ilike("title", q).limit(5),
       ]);
       const r: { type: string; items: any[] }[] = [];

@@ -1,1 +1,13 @@
 project_id = "fqahbotghxsegfthqplm"
+
+[functions.create-consult-chat]
+verify_jwt = true
+
+[functions.daily-create-room]
+verify_jwt = true
+
+[functions.giphy-search]
+verify_jwt = true
+
+[functions.seed-data]
+verify_jwt = true

@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@daily-co/daily-js':
-        specifier: ^0.89.1
-        version: 0.89.1
+        specifier: ^0.91.0
+        version: 0.91.0
       '@hookform/resolvers':
         specifier: ^3.10.0
         version: 3.10.0(react-hook-form@7.85.0(react@18.3.1))
@@ -253,8 +253,8 @@ packages:
     resolution: {integrity: sha512-Nq8OhGWiZIZGV6hLHoyAKLLcJihP/xFeBMGJoUrxTX2psI8dCifzLhZISFb+VWS3wFMRDmCGw5R+dOySCqPLhw==}
     engines: {node: '>=6.9.0'}
 
-  '@daily-co/daily-js@0.89.1':
-    resolution: {integrity: sha512-1RnXtzg8aeJYLhmMjRK9mnsWRljwsM2OUBJH5onpAOFIjHPSA7h03DSCd8D/YMyrpX8jQHcVMDSWOhcj+tZD/A==}
+  '@daily-co/daily-js@0.91.0':
+    resolution: {integrity: sha512-f/f1qBQhDSvMgucfBUNfV1CHYRItQuRcESzkY/wcYLgKtBi/X6bnwvTeKcHORVdb82J/jnIS553cR3gfxC8uCg==}
     engines: {node: '>=22.14.0'}
 
   '@esbuild/aix-ppc64@0.21.5':
@@ -3198,7 +3198,7 @@ snapshots:
 
   '@babel/runtime@7.29.7': {}
 
-  '@daily-co/daily-js@0.89.1':
+  '@daily-co/daily-js@0.91.0':
     dependencies:
       '@babel/runtime': 7.29.7
       '@sentry/browser': 8.55.2

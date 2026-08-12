@@ -90,13 +90,17 @@ Deno.serve(async (req) => {
     const { data: testModeSetting } = await supabase
       .from("app_settings")
       .select("value")
-      .eq("key", "verification_test_mode")
+      .eq("key", "test_mode")
       .maybeSingle();
 
-    const isTestMode = testModeSetting?.value === "true";
+    const isTestMode =
+      Deno.env.get("ENABLE_TEST_OTP") === "true" &&
+      testModeSetting?.value === "true";
 
     // Generate 6-digit code
-    const code = String(Math.floor(100000 + Math.random() * 900000));
+    const code = isTestMode
+      ? "123456"
+      : String(Math.floor(100000 + Math.random() * 900000));
 
     // Store code in database
     const { error: insertError } = await supabase.from("verification_codes").insert({

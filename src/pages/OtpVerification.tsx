@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { toast } from "sonner";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
+import { TEST_OTP, TEST_OTP_BUILD_ENABLED } from "@/lib/testOtp";
 
 const SUPER_ADMIN_PHONE = "8700602524";
 
@@ -45,8 +46,7 @@ const OtpVerification = () => {
     staleTime: 60000,
   });
 
-  const TEST_OTP = "123456";
-  const isTestMode = testMode !== false; // default true
+  const isTestMode = TEST_OTP_BUILD_ENABLED && testMode === true;
 
   if (!phone) {
     return (
@@ -67,7 +67,7 @@ const OtpVerification = () => {
       toast.error("SMS verification is not available right now. Please try again later.");
       return;
     }
-    if (otp !== TEST_OTP) { toast.error("Invalid OTP. Use test code: 123456"); return; }
+    if (otp !== TEST_OTP) { toast.error(`Invalid OTP. Use test code: ${TEST_OTP}`); return; }
 
     setLoading(true);
     try {

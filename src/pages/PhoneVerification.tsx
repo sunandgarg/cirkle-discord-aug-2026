@@ -9,8 +9,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp
 import { toast } from "sonner";
 import { Smartphone, ShieldCheck, ArrowLeft } from "lucide-react";
 import CountryCodeSelect, { COUNTRY_CODES, type CountryOption } from "@/components/CountryCodeSelect";
-
-const TEST_OTP = "123456";
+import { TEST_OTP, TEST_OTP_BUILD_ENABLED } from "@/lib/testOtp";
 
 const isValidPhone = (code: string, digits: string) =>
   code === "+91" ? digits.length === 10 : digits.length >= 6 && digits.length <= 15;
@@ -33,7 +32,7 @@ const PhoneVerification = () => {
     },
     staleTime: 60000,
   });
-  const isTestMode = testMode !== false;
+  const isTestMode = TEST_OTP_BUILD_ENABLED && testMode === true;
 
   useEffect(() => {
     if (loading) return;
@@ -58,7 +57,8 @@ const PhoneVerification = () => {
 
   const verify = async () => {
     if (otp.length !== 6) { toast.error("Enter the full 6-digit code"); return; }
-    if (otp !== TEST_OTP) { toast.error("Invalid code. Use test code: 123456"); return; }
+    if (!isTestMode) { toast.error("Test OTP is disabled for this deployment"); return; }
+    if (otp !== TEST_OTP) { toast.error(`Invalid code. Use test code: ${TEST_OTP}`); return; }
     setSaving(true);
     try {
       const { error } = await supabase.auth.updateUser({

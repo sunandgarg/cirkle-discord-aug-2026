@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { toast } from "sonner";
 import { ArrowLeft, GraduationCap, CheckCircle2, Mail, ShieldCheck, AlertCircle } from "lucide-react";
 import PostVerifyOnboarding from "@/components/PostVerifyOnboarding";
+import { TEST_OTP, TEST_OTP_BUILD_ENABLED } from "@/lib/testOtp";
 
 const IIT_LIST = [
   { name: "IIT Bombay", studentDomain: "iitb.ac.in", alumniDomain: "alumni.iitb.ac.in" },
@@ -147,14 +148,14 @@ const IitVerification = () => {
       const { data: testModeSetting } = await supabase
         .from("app_settings")
         .select("value")
-        .eq("key", "verification_test_mode")
+        .eq("key", "test_mode")
         .maybeSingle();
-      const isTestMode = testModeSetting?.value === "true";
+      const isTestMode = TEST_OTP_BUILD_ENABLED && testModeSetting?.value === "true";
 
       let isValidCode = false;
       const normalizedEmail = email.trim().toLowerCase();
 
-      if (isTestMode && otp === "123456") {
+      if (isTestMode && otp === TEST_OTP) {
         isValidCode = true;
       } else {
         const { data: codeData } = await supabase

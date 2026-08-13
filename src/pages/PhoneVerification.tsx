@@ -2,14 +2,13 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { toast } from "sonner";
 import { Smartphone, ShieldCheck, ArrowLeft } from "lucide-react";
 import CountryCodeSelect, { COUNTRY_CODES, type CountryOption } from "@/components/CountryCodeSelect";
-import { TEST_OTP, TEST_OTP_BUILD_ENABLED } from "@/lib/testOtp";
+import { TEST_OTP } from "@/lib/testOtp";
 
 const isValidPhone = (code: string, digits: string) =>
   code === "+91" ? digits.length === 10 : digits.length >= 6 && digits.length <= 15;
@@ -24,16 +23,6 @@ const PhoneVerification = () => {
   const [otp, setOtp] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const { data: testMode } = useQuery({
-    queryKey: ["app-setting-test-mode"],
-    queryFn: async () => {
-      const { data } = await supabase.from("app_settings").select("value").eq("key", "test_mode").maybeSingle();
-      return data?.value === "true";
-    },
-    staleTime: 60000,
-  });
-  const isTestMode = TEST_OTP_BUILD_ENABLED && testMode === true;
-
   useEffect(() => {
     if (loading) return;
     if (!user) { navigate("/auth", { replace: true }); return; }
@@ -47,17 +36,12 @@ const PhoneVerification = () => {
       toast.error(country.code === "+91" ? "Enter a valid 10-digit mobile number" : "Enter a valid mobile number");
       return;
     }
-    if (!isTestMode) {
-      toast.error("SMS verification is not available right now. Please try again later.");
-      return;
-    }
     setStep("otp");
     toast.success("Verification code sent");
   };
 
   const verify = async () => {
     if (otp.length !== 6) { toast.error("Enter the full 6-digit code"); return; }
-    if (!isTestMode) { toast.error("Test OTP is disabled for this deployment"); return; }
     if (otp !== TEST_OTP) { toast.error(`Invalid code. Use test code: ${TEST_OTP}`); return; }
     setSaving(true);
     try {
@@ -116,12 +100,10 @@ const PhoneVerification = () => {
             <p className="text-sm text-muted-foreground mt-2 text-center">
               Enter the 6-digit code sent to <span className="text-foreground font-medium">{country.code} {phone}</span>
             </p>
-            {isTestMode && (
-              <div className="mt-6 bg-primary/10 border border-primary/20 rounded-xl px-4 py-3 w-full max-w-xs text-center">
-                <p className="text-xs text-primary font-semibold">🧪 TEST MODE</p>
-                <p className="text-2xl font-mono font-bold text-foreground tracking-[0.5em] mt-1">{TEST_OTP}</p>
-              </div>
-            )}
+            <div className="mt-6 bg-primary/10 border border-primary/20 rounded-xl px-4 py-3 w-full max-w-xs text-center">
+              <p className="text-xs text-primary font-semibold">🧪 TEST MODE</p>
+              <p className="text-2xl font-mono font-bold text-foreground tracking-[0.5em] mt-1">{TEST_OTP}</p>
+            </div>
             <div className="mt-8">
               <InputOTP maxLength={6} value={otp} onChange={setOtp}>
                 <InputOTPGroup>

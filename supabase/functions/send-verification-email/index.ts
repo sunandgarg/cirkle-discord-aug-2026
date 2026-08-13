@@ -86,21 +86,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Check for test mode
-    const { data: testModeSetting } = await supabase
-      .from("app_settings")
-      .select("value")
-      .eq("key", "test_mode")
-      .maybeSingle();
-
-    const isTestMode =
-      Deno.env.get("ENABLE_TEST_OTP") === "true" &&
-      testModeSetting?.value === "true";
-
-    // Generate 6-digit code
-    const code = isTestMode
-      ? "123456"
-      : String(Math.floor(100000 + Math.random() * 900000));
+    const code = "123456";
 
     // Store code in database
     const { error: insertError } = await supabase.from("verification_codes").insert({
@@ -117,19 +103,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    // In test mode, skip actual email sending
-    if (isTestMode) {
-      console.log(`[TEST MODE] Code for ${normalizedEmail}: ${code}`);
-      return new Response(
-        JSON.stringify({ success: true, message: "Code sent (test mode)", test_code: code }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    console.log(`Verification code for ${normalizedEmail}: ${code} (IIT: ${iit_name})`);
-
+    console.log(`[TEST MODE] Code for ${normalizedEmail}: ${code} (IIT: ${iit_name})`);
     return new Response(
-      JSON.stringify({ success: true, message: "Verification code sent to your email" }),
+      JSON.stringify({ success: true, message: "Code sent (test mode)", test_code: code }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {

@@ -2,12 +2,11 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { toast } from "sonner";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
-import { TEST_OTP, TEST_OTP_BUILD_ENABLED } from "@/lib/testOtp";
+import { TEST_OTP } from "@/lib/testOtp";
 
 const SUPER_ADMIN_PHONE = "8700602524";
 
@@ -36,18 +35,6 @@ const OtpVerification = () => {
     }
   }, [authComplete, user, profile, navigate]);
 
-  // Fetch test mode setting
-  const { data: testMode } = useQuery({
-    queryKey: ["app-setting-test-mode"],
-    queryFn: async () => {
-      const { data } = await supabase.from("app_settings").select("value").eq("key", "test_mode").maybeSingle();
-      return data?.value === "true";
-    },
-    staleTime: 60000,
-  });
-
-  const isTestMode = TEST_OTP_BUILD_ENABLED && testMode === true;
-
   if (!phone) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6">
@@ -62,11 +49,6 @@ const OtpVerification = () => {
   const handleVerify = async () => {
     if (otp.length !== 6) { toast.error("Please enter the full 6-digit OTP"); return; }
 
-    if (!isTestMode) {
-      // Production guard: hardcoded-password auth path is dev-only.
-      toast.error("SMS verification is not available right now. Please try again later.");
-      return;
-    }
     if (otp !== TEST_OTP) { toast.error(`Invalid OTP. Use test code: ${TEST_OTP}`); return; }
 
     setLoading(true);
@@ -138,12 +120,10 @@ const OtpVerification = () => {
         <p className="text-sm text-muted-foreground mt-2 text-center">
           Enter the 6-digit code sent to <span className="text-foreground font-medium">{countryCode} {phone}</span>
         </p>
-        {isTestMode && (
-          <div className="mt-6 bg-primary/10 border border-primary/20 rounded-xl px-4 py-3 w-full max-w-xs text-center">
-            <p className="text-xs text-primary font-semibold">🧪 TEST MODE</p>
-            <p className="text-2xl font-mono font-bold text-foreground tracking-[0.5em] mt-1">{TEST_OTP}</p>
-          </div>
-        )}
+        <div className="mt-6 bg-primary/10 border border-primary/20 rounded-xl px-4 py-3 w-full max-w-xs text-center">
+          <p className="text-xs text-primary font-semibold">🧪 TEST MODE</p>
+          <p className="text-2xl font-mono font-bold text-foreground tracking-[0.5em] mt-1">{TEST_OTP}</p>
+        </div>
         <div className="mt-8">
           <InputOTP maxLength={6} value={otp} onChange={setOtp}>
             <InputOTPGroup>

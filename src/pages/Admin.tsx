@@ -531,18 +531,6 @@ const Admin = () => {
               </div>
             </div>
 
-            <div className="bg-card border border-border rounded-xl p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[hsl(var(--warning))]/10 flex items-center justify-center"><ToggleLeft className="w-5 h-5 text-[hsl(var(--warning))]" /></div>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">Test Mode (OTP)</p>
-                    <p className="text-xs text-muted-foreground">When ON in a test-enabled deployment, OTP 123456 works for all phone and IIT verification flows</p>
-                  </div>
-                </div>
-                <Switch checked={appSettings?.test_mode === "true"} onCheckedChange={(checked) => updateSetting("test_mode", checked ? "true" : "false")} />
-              </div>
-            </div>
             <div className="bg-card border border-border rounded-xl p-4 space-y-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center"><Smartphone className="w-5 h-5 text-primary" /></div>

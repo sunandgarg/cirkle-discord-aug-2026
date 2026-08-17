@@ -371,6 +371,20 @@ const generateScopeDemos = (scopeType: string, scopeKey: string, scopeDef?: any)
 
 const PAGE_SIZE = 50;
 const MAX_RENDERED = 200;
+const comparePostsChronologically = (a: any, b: any) => {
+  const timeDiff = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+  if (timeDiff !== 0) return timeDiff;
+  return String(a.id || "").localeCompare(String(b.id || ""));
+};
+const sortPostsChronologically = (items: any[] = []) => [...items].sort(comparePostsChronologically);
+const mergeUniquePostsChronologically = (items: any[] = []) => {
+  const byId = new Map<string, any>();
+  items.forEach((item) => {
+    if (!item?.id) return;
+    byId.set(item.id, { ...(byId.get(item.id) || {}), ...item });
+  });
+  return sortPostsChronologically([...byId.values()]);
+};
 
 /* ══════════════════════════════════════════════════ */
 /*                  FORUM PAGE                       */
@@ -666,14 +680,14 @@ const Forum = () => {
         // Real empty: return marker so empty-state UI can show
         return { posts: [], isDemo: activeScope.type === "GLOBAL", demos: activeScope.type === "GLOBAL" ? DEMO_MESSAGES : [] };
       }
-      const enriched = (await enrichPosts(rawPosts as any[])).reverse();
+      const enriched = sortPostsChronologically(await enrichPosts(rawPosts as any[]));
       setCachedPosts(activeScope.type, activeScope.key, enriched);
       if ((rawPosts as any[]).length < PAGE_SIZE) setHasMoreOlder(false);
       return { posts: enriched, isDemo: false, demos: [] };
     },
     placeholderData: () => {
       const cached = getCachedPosts(activeScope.type, activeScope.key);
-      return cached ? { posts: cached, isDemo: false, demos: [] } : undefined;
+      return cached ? { posts: sortPostsChronologically(cached), isDemo: false, demos: [] } : undefined;
     },
     staleTime: 15000,
   });
@@ -681,8 +695,8 @@ const Forum = () => {
   // Merge older pages on top
   const posts = useMemo(() => {
     if (!postsData) return undefined;
-    if (postsData.isDemo) return postsData.demos;
-    return [...olderPages, ...(postsData.posts || [])];
+    if (postsData.isDemo) return sortPostsChronologically(postsData.demos);
+    return mergeUniquePostsChronologically([...olderPages, ...(postsData.posts || [])]);
   }, [postsData, olderPages]);
   const isEmptyChannel = !!postsData && !postsData.isDemo && (postsData.posts?.length || 0) === 0 && olderPages.length === 0;
 
@@ -996,8 +1010,8 @@ const Forum = () => {
         if (olderArr.length === 0) {
           setHasMoreOlder(false);
         } else {
-          const enriched = (await enrichPosts(olderArr)).reverse();
-          setOlderPages(prev => [...enriched, ...prev]);
+          const enriched = sortPostsChronologically(await enrichPosts(olderArr));
+          setOlderPages(prev => mergeUniquePostsChronologically([...enriched, ...prev]));
           if (olderArr.length < PAGE_SIZE) setHasMoreOlder(false);
           // Preserve scroll position
           requestAnimationFrame(() => {
@@ -1148,7 +1162,7 @@ const Forum = () => {
   const selectScope = (type: string, key: string) => { setActiveScope({ type, key }); setSidebarOpen(false); setActiveTab("feed"); setThreadPost(null); };
 
   const filteredPosts = useMemo(() => {
-    let filtered = posts || [];
+    let filtered = sortPostsChronologically(posts || []);
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       switch (searchTab) {
@@ -1167,7 +1181,7 @@ const Forum = () => {
     if (activeTab === "pinned") filtered = filtered.filter((p: any) => userPinnedIds.includes(p.id) || p.pinned_at);
     // Cap at MAX_RENDERED
     if (filtered.length > MAX_RENDERED) filtered = filtered.slice(filtered.length - MAX_RENDERED);
-    return filtered;
+    return sortPostsChronologically(filtered);
   }, [posts, searchQuery, searchTab, showSearch, activeTab, userPinnedIds]);
 
   const searchCounts = useMemo(() => {
